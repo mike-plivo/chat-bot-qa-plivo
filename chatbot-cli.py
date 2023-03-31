@@ -23,7 +23,9 @@ with open(settings.FAISS_VECTOR_DATABASE, "rb") as f:
     db = pickle.load(f)
 
 chain_type_kwargs = {"prompt": chat_prompt}
-llm = ChatOpenAI(model_name=settings.CHAT_OPENAI_MODEL, temperature=CHAT_OPENAI_TEMPERATURE, max_tokens=settings.CHAT_OPENAI_MAX_TOKENS)
+llm = ChatOpenAI(model_name=settings.CHAT_OPENAI_MODEL, 
+                 temperature=settings.CHAT_OPENAI_TEMPERATURE, 
+                 max_tokens=settings.CHAT_OPENAI_MAX_TOKENS)
 chain = RetrievalQAWithSourcesChain.from_chain_type(
     llm=llm,
     chain_type="stuff",
