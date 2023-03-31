@@ -11,7 +11,7 @@ from langchain.prompts.chat import (
 import settings
 
 messages = [
-    SystemMessagePromptTemplate.from_template(settings.SYSTEM_TEMPLATE),
+    SystemMessagePromptTemplate.from_template(settings.CHAT_SYSTEM_TEMPLATE),
     HumanMessagePromptTemplate.from_template("{question}")
 ]
 chat_prompt = ChatPromptTemplate.from_messages(messages)
