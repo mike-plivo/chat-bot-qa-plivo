@@ -63,5 +63,7 @@ while True:
             continue
         result = chain(query)
         print_result(result)
+    except KeyboardInterrupt:
+        sys.exit(0)
     except Exception as e:
         sys.exit(0)
