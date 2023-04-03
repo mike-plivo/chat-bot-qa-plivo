@@ -29,7 +29,6 @@ class BaseCodeLoader(BaseLoader):
         'cpp': 'cpp',
         'cs': 'csharp',
         'php': 'php',
-        'php': 'php',
         'rb': 'ruby',
         'ts': 'typescript',
         'scala': 'scala',
