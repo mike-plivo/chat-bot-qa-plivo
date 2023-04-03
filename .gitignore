@@ -1,6 +1,7 @@
 # do not upload the FAISS files
 *.faiss
 data/*.faiss
+data/git_repos/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

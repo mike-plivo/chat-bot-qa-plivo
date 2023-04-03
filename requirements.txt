@@ -1,2 +1,5 @@
 langchain>=0.0.126
 prompt-toolkit>=3.0.32
+pygments
+binaryornot
+gitignore_parser

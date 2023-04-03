@@ -19,7 +19,7 @@ chat_prompt = ChatPromptTemplate.from_messages(messages)
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
 
-with open(settings.FAISS_VECTOR_DATABASE, "rb") as f:
+with open(settings.SITEMAP_FAISS_VECTOR_DATABASE, "rb") as f:
     db = pickle.load(f)
 
 chain_type_kwargs = {"prompt": chat_prompt}

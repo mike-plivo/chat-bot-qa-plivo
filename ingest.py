@@ -19,7 +19,7 @@ def ingest_docs():
     db = FAISS.from_documents(documents, embeddings)
 
     # Save vectorstore
-    with open(settings.FAISS_VECTOR_DATABASE , "wb") as f:
+    with open(settings.SITEMAP_FAISS_VECTOR_DATABASE , "wb") as f:
         pickle.dump(db, f)
 
 
