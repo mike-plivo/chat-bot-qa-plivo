@@ -1,71 +1,51 @@
-import os
-import subprocess
 import pickle
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.faiss import FAISS
 from langchain.document_loaders.directory import DirectoryLoader
+from langchain.callbacks import get_openai_callback
 
 import settings
+from code_loader import GithubCodeLoader
 
 
-def clone_git_repo(repo_url, branch="master"):
-    """Clone a git repo."""
-    repo_name = repo_url.split("/")[-1]
-    repo_path = os.path.join(settings.GIT_REPOS_DIR, repo_name)
-    # Check if repo exists and pull
-    if os.path.isdir(repo_path):
-        print(f"Pulling repo: {repo_url} with branch: {branch}")
-        # use Popen to avoid blocking
-        cmd = f"git pull"
-        exitcode, output = subprocess.getstatusoutput(cmd)
-        if exitcode != 0:
-            raise Exception(f"Error cloning repo: exitcode {exitcode}: {output}")
-    # If repo doesn't exist, clone
-    else:
-        print(f"Cloning repo: {repo_url} with branch: {branch}")
-        # use Popen to avoid blocking
-        cmd = f"git clone {repo_url} -b {branch} --single-branch {repo_path}"
-        exitcode, output = subprocess.getstatusoutput(cmd)
-        if exitcode != 0:
-            raise Exception(f"Error cloning repo: exitcode {exitcode}: {output}")
-    return repo_path
-
-def clone_all_git_repos():
-    """Clone all git repos."""
-    repo_paths = []
+def ingest_docs():
+    """Ingest all docs."""
+    loaders = []
+    raw_documents = []
     for repo in settings.GIT_REPO_URLS:
         try:
             repo_url, branch = repo
         except:
-            repo_url = repo
-            branch = "master"
+            repo_url, branch = repo, settings.GIT_DEFAULT_BRANCH
 
-        repo_path = clone_git_repo(repo_url)
-        repo_paths.append(repo_path)
-    return repo_paths
+        print(f"Loading {repo_url} with branch {branch}")
+        loader = GithubCodeLoader(repo_url, local_dir=settings.GIT_REPOS_DIR, branch=branch, debug=True)
+        docs = loader.load()
+        if docs:
+            print(f"Loaded {len(docs)} documents from {repo_url}")
+            raw_documents.extend(docs)
 
-def ingest_docs():
-    """Ingest all docs."""
-    # Clone all repos
-    clone_all_git_repos()
-    print("Cloned all repos, loading documents...")
-    # TODO use custom CodeLoader !!!
-    loader = DirectoryLoader(path=settings.GIT_REPOS_DIR, load_hidden=True, recursive=True)
-    raw_documents = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
-    )
-    documents = text_splitter.split_documents(raw_documents)
-    embeddings = OpenAIEmbeddings()
-    print("Ingesting documents...")
-    db = FAISS.from_documents(documents, embeddings)
+    with get_openai_callback() as cb:
+        print(f"Loaded total {len(raw_documents)} documents")
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+        )
+        documents = text_splitter.split_documents(raw_documents)
+        embeddings = OpenAIEmbeddings()
+        print("Ingesting documents...")
+        db = FAISS.from_documents(documents, embeddings)
+        # Save vectorstore
+        print(f"Saving vectorstore {settings.GIT_FAISS_VECTOR_DATABASE}")
+        with open(settings.GIT_FAISS_VECTOR_DATABASE, "wb") as f:
+            pickle.dump(db, f)
+        print(f"Total Tokens: {cb.total_tokens}")
+        print(f"Prompt Tokens: {cb.prompt_tokens}")
+        print(f"Completion Tokens: {cb.completion_tokens}")
+        print(f"Successful Requests: {cb.successful_requests}")
+        print(f"Total Cost (USD): ${cb.total_cost}")
 
-    # Save vectorstore
-    print("Saving vectorstore ...")
-    with open(settings.GIT_FAISS_VECTOR_DATABASE,"wb") as f:
-        pickle.dump(db, f)
 
 
 if __name__ == "__main__":

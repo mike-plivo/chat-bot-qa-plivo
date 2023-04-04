@@ -14,18 +14,18 @@ import settings
 
 
 messages = [
-    SystemMessagePromptTemplate.from_template(settings.CHAT_SYSTEM_TEMPLATE),
+    SystemMessagePromptTemplate.from_template(settings.GIT_SYSTEM_TEMPLATE),
     HumanMessagePromptTemplate.from_template("{question}")
 ]
 chat_prompt = ChatPromptTemplate.from_messages(messages)
 
-with open(settings.SITEMAP_FAISS_VECTOR_DATABASE, "rb") as f:
+with open(settings.GIT_FAISS_VECTOR_DATABASE, "rb") as f:
     db = pickle.load(f)
 
 chain_type_kwargs = {"prompt": chat_prompt}
-llm = ChatOpenAI(model_name=settings.CHAT_OPENAI_MODEL, 
-                 temperature=settings.CHAT_OPENAI_TEMPERATURE, 
-                 max_tokens=settings.CHAT_OPENAI_MAX_TOKENS)
+llm = ChatOpenAI(model_name=settings.GIT_OPENAI_MODEL, 
+                 temperature=settings.GIT_OPENAI_TEMPERATURE, 
+                 max_tokens=settings.GIT_OPENAI_MAX_TOKENS)
 chain = RetrievalQAWithSourcesChain.from_chain_type(
     llm=llm,
     chain_type="stuff",
@@ -55,7 +55,7 @@ def print_result(result):
 
 while True:
     try:
-        print_formatted_text(HTML('<p fg="ansiwhite">Enter your question</p><p fg="ansired"> ("quit" to exit)</p>'))
+        print_formatted_text(HTML('<p fg="ansiwhite">Enter your coding question</p><p fg="ansired"> ("quit" to exit)</p>'))
         query = prompt(">>> ")
         if query == "quit":
             sys.exit(0)
@@ -66,4 +66,5 @@ while True:
     except KeyboardInterrupt:
         sys.exit(0)
     except Exception as e:
+        print(e)
         sys.exit(0)

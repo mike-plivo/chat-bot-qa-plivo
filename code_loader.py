@@ -100,7 +100,7 @@ class BaseCodeLoader(BaseLoader):
 
     def _load_directory(self, directory_path: Path) -> List[Document]:
         for file_path in directory_path.iterdir():
-            self._debug("Scanning: {}".format(file_path.as_posix()))
+            self._debug(f"Scanning: {file_path.as_posix()}")
             if self._is_excluded(file_path):
                 continue
             if file_path.is_dir():
@@ -110,7 +110,7 @@ class BaseCodeLoader(BaseLoader):
         return self._documents
 
     def _load_file(self, file_path: Path, extra_metadata: dict = None) -> List[Document]:
-        self._debug("Loading: {}".format(file_path.as_posix()))
+        self._debug("Loading {file_path.as_posix()}")
         # do not index binary files
         if is_binary(file_path.as_posix()):
             return
@@ -197,8 +197,8 @@ class GithubCodeLoader(BaseCodeLoader):
             repo_url = repo_url[:-4]
         if repo_url.endswith('/'):
             repo_url = repo_url[:-1]
-        if repo_url.startswith('git@') and ':' in repo_url:
-            _, repo_url = repo_url.split(':', 1)
+        if repo_url.startswith('git@'):
+            _, repo_url = repo_url.split('git@', 1)
             repo_url = 'https://' + repo_url
         file_name = file_path.as_posix().replace(self.path, '')
         remote_url = repo_url + '/blob/' + self.branch + file_name
