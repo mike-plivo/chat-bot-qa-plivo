@@ -9,6 +9,7 @@ from langchain.prompts.chat import (
 )
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.callbacks import get_openai_callback
 
 import settings
 
@@ -34,7 +35,7 @@ chain = RetrievalQAWithSourcesChain.from_chain_type(
     chain_type_kwargs=chain_type_kwargs
 )
 
-def print_result(result):
+def print_result(query, result):
     cr = "\n"
     output_text = f"""
 ## Question
@@ -46,6 +47,9 @@ def print_result(result):
 ## References
 {cr.join(list(set([doc.metadata['source'] for doc in result['source_documents']])))}
 
+## Cost
+{result['stats']}
+
 ## Debug
 {result}
 
@@ -53,18 +57,34 @@ def print_result(result):
     print(output_text)
 
 
-while True:
-    try:
-        print_formatted_text(HTML('<p fg="ansiwhite">Enter your coding question</p><p fg="ansired"> ("quit" to exit)</p>'))
-        query = prompt(">>> ")
-        if query == "quit":
-            sys.exit(0)
-        if not query:
-            continue
+def query_chain(query):
+    with get_openai_callback() as cb:
         result = chain(query)
-        print_result(result)
-    except KeyboardInterrupt:
-        sys.exit(0)
-    except Exception as e:
-        print(e)
-        sys.exit(0)
+        result["stats"] = {'total_tokens': cb.total_tokens,
+                        'prompt_tokens': cb.prompt_tokens,
+                        'completion_tokens': cb.completion_tokens,
+                        'successful_requests': cb.successful_requests,
+                        'total_cost': cb.total_cost}
+        print_result(query, result)
+
+def main_loop():
+    while True:
+        try:
+            print_formatted_text(HTML('<p fg="ansiwhite">Enter your coding question</p><p fg="ansired"> ("quit" to exit)</p>'))
+            query = prompt(">>> ")
+            if query == "quit":
+                print("Bye!")
+                sys.exit(0)
+            if not query:
+                continue
+            query_chain(query)
+        except KeyboardInterrupt:
+            print("Bye!")
+            sys.exit(0)
+        except Exception as e:
+            print("Oops:", e)
+            sys.exit(0)
+
+if __name__ == "__main__":
+    main_loop()
+

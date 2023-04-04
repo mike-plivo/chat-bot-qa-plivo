@@ -197,9 +197,8 @@ class GithubCodeLoader(BaseCodeLoader):
             repo_url = repo_url[:-4]
         if repo_url.endswith('/'):
             repo_url = repo_url[:-1]
-        if repo_url.startswith('git@'):
-            _, repo_url = repo_url.split('git@', 1)
-            repo_url = 'https://' + repo_url
+        if repo_url.startswith('git@github.com:'):
+            repo_url = repo_url.replace('git@github.com:', 'https://github.com/')
         file_name = file_path.as_posix().replace(self.path, '')
         remote_url = repo_url + '/blob/' + self.branch + file_name
         extra_metadata['git_url'] = remote_url
