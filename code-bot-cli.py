@@ -15,7 +15,7 @@ from langchain.callbacks import get_openai_callback
 import settings
 
 
-class CodeBot(object):
+class BaseCodeBot(object):
     available_languages = {"python": "Python",
                            "java": "Java",
                            "node": "Node.js",
@@ -141,9 +141,9 @@ class CodeBot(object):
 
 
 
-class PlivoCodeBot(CodeBot):
-    def __init__(self, code="python"):
-        self._banner = '<p fg="ansiwhite">Plivo Code Bot</p><p fg="ansired"> ("/help" for help)</p>'
+class CodeBot(BaseCodeBot):
+    def __init__(self, code="python", banner='CodeBot'):
+        self._banner = f'<p fg="ansiwhite">{banner}</p><p fg="ansired"> ("/help" for help)</p>'
         super().__init__(code)
         self._set_cost = True
 
@@ -170,6 +170,10 @@ class PlivoCodeBot(CodeBot):
 
     def _cmd_clear(self):
         print("\033c")
+
+    def _cmd_banner(self):
+        print_formatted_text(HTML(self._banner))
+        print('\n')
 
     def _cmd_code(self):
         print("Supported languages:")
@@ -204,13 +208,14 @@ class PlivoCodeBot(CodeBot):
         print('\n')
 
     def _cmd_help(self):
-        print("\tType '/quit' to exit")
+        print("\tType '/ask [QUESTION]' to ask a question")
+        print("\tType '/banner' show banner")
         print("\tType '/clear' to clear the screen")
         print("\tType '/code [LANGUAGE]' to change the language")
         print("\tType '/code' to see the supported languages and the current active laguage")
-        print("\tType '/ask [QUESTION]' to ask a question")
         print("\tType '/debug' show if debug mode is enabled or disabled")
         print("\tType '/debug [true|false]' debug info including cost")
+        print("\tType '/quit' to exit")
         print('\n')
 
     def _cmd_debug(self):
@@ -235,6 +240,8 @@ class PlivoCodeBot(CodeBot):
         query = prompt(">>> ")
         if query == "/quit":
             self._cmd_exit('Bye!')
+        elif query == "/banner":
+            self._cmd_banner()
         elif query == "/clear":
             self._cmd_clear()
         elif query == "/code":
@@ -264,6 +271,6 @@ class PlivoCodeBot(CodeBot):
 
 
 if __name__ == "__main__":
-    bot = PlivoCodeBot()
+    bot = CodeBot(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
     bot.run()
 

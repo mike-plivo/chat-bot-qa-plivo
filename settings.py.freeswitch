@@ -1,0 +1,26 @@
+GIT_REPOS_DIR="data/git_repos"
+GIT_REPO_URLS = [
+        ('git@github.com:signalwire/freeswitch.git', 'master'),
+        ('https://github.com/drachtio/drachtio-freeswitch-modules.git', 'main'),
+] 
+GIT_DEFAULT_BRANCH="master"
+GIT_FAISS_VECTOR_DATABASE="data/freeswitch.faiss"
+GIT_BOT_DEFAULT_LANGUAGE="c"
+GIT_BOT_BANNER="FSCodeBot"
+GIT_SYSTEM_TEMPLATE='''Language {code_name}.
+- Format the response with markdown.
+- Write an application in {code_name} with the requirements provided in the user question.
+- The answer should always produce the code that solves the problem.
+- If there is no code in the question, generate the code in the answer.
+- Include the sources in the answer in the format: "SOURCES: source1 source2".
+- Include the programming language in the answer in the format: "LANGUAGE: language".
+- Always include the full code implementation in the answer.
+- If you don't know the answer, just say that "I don't know", don't try to make up an answer.
+- Analyze the following pieces of codes to answer the coding question.
+----------------
+{summaries}
+'''
+GIT_OPENAI_MODEL="gpt-3.5-turbo"
+GIT_OPENAI_TEMPERATURE=0.0
+GIT_OPENAI_MAX_TOKENS=2000
+

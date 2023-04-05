@@ -5,6 +5,7 @@ from typing import List
 from pathlib import Path
 import logging
 
+import chardet
 import pygments.lexers
 from binaryornot.check import is_binary
 from gitignore_parser import parse_gitignore
@@ -26,7 +27,10 @@ class BaseCodeLoader(BaseLoader):
         'java': 'java',
         'go': 'go',
         'c': 'c',
+        'h': 'c',
+        'cc': 'c',
         'cpp': 'cpp',
+        'hpp': 'cpp',
         'cs': 'csharp',
         'php': 'php',
         'rb': 'ruby',
@@ -84,7 +88,8 @@ class BaseCodeLoader(BaseLoader):
 
     def _debug(self, message: str):
         """Log message."""
-        self.debug is True and self._logger.debug(message)
+        if self.debug is True:
+            print(f"DEBUG: {message}")
 
     def _is_excluded(self, path: Path) -> bool:
         """Check if directory or file is excluded."""
@@ -110,28 +115,38 @@ class BaseCodeLoader(BaseLoader):
         return self._documents
 
     def _load_file(self, file_path: Path, extra_metadata: dict = None) -> List[Document]:
-        self._debug("Loading {file_path.as_posix()}")
+        self._debug(f"Loading {file_path.as_posix()}")
         # do not index binary files
         if is_binary(file_path.as_posix()):
             return
 
         metadata = {}
-        with open(file_path.as_posix()) as f:
+        try:
+            f = open(file_path.as_posix(), 'r', errors='ignore')
             text = f.read()
-            # do not index empty files
-            if not text:
-                return
-            # Get the file extension
-            if not '.' in file_path.name:
-                ext = ''
-            else:
-                ext = file_path.name.split('.')[-1]
+        except Exception as e:
+            self._debug(f"Error reading file: {file_path.as_posix()} - {e}")
+            return
+        finally:
             try:
-                language = self.extension_to_language[ext]
-                metadata = {"source": file_path.as_posix(), 'language': language, 'file_extension': ext, 'category': 'code'}
+                f.close()
             except:
-                language = self.detect_language_from_text(text)
-                metadata = {"source": file_path.as_posix(), 'language': language.lower(), 'file_extension': ext, 'category': 'code'}
+                pass
+
+        # do not index empty files
+        if not text:
+            return
+        # Get the file extension
+        if not '.' in file_path.name:
+            ext = ''
+        else:
+            ext = file_path.name.split('.')[-1]
+        try:
+            language = self.extension_to_language[ext]
+            metadata = {"source": file_path.as_posix(), 'language': language, 'file_extension': ext, 'category': 'code'}
+        except:
+            language = self.detect_language_from_text(text)
+            metadata = {"source": file_path.as_posix(), 'language': language.lower(), 'file_extension': ext, 'category': 'code'}
 
         if extra_metadata:
             metadata.update(extra_metadata)
@@ -146,7 +161,11 @@ class BaseCodeLoader(BaseLoader):
 
 
 class GithubCodeLoader(BaseCodeLoader):
-    def __init__(self, repository_url: str, local_dir: None, branch: str = 'main', exclude_dirs: List[str] = None, exclude_files: List[str] = None, debug=False):
+    def __init__(self, repository_url: str, local_dir: None, branch: str = 'main', 
+                 exclude_dirs: List[str] = None, 
+                 exclude_files: List[str] = None, 
+                 include_only_known_extensions: bool = False,
+                 debug=False):
         """Initialize with file path."""
         super().__init__(local_dir, exclude_dirs, exclude_files, debug)
 
@@ -156,6 +175,12 @@ class GithubCodeLoader(BaseCodeLoader):
         if not local_dir:
             local_dir = os.getcwd()
         self.path = os.path.join(local_dir, self.repo_url.split("/")[-1])
+
+        self._include_only_known_extensions = include_only_known_extensions
+        if self._include_only_known_extensions:
+            self.valid_extensions = list(set(self.extension_to_language.keys()))
+        else:
+            self.valid_extensions = []
 
         if exclude_dirs is None:
             exclude_dirs = []
@@ -190,6 +215,15 @@ class GithubCodeLoader(BaseCodeLoader):
         return super()._is_excluded(path)
 
     def _load_file(self, file_path: Path, extra_metadata: dict = None) -> List[Document]:
+        # Get the file extension
+        if not '.' in file_path.name:
+            ext = ''
+        else:
+            ext = file_path.name.split('.')[-1]
+        if self._include_only_known_extensions and ext not in self.valid_extensions:
+            self._debug(f"Excluding (from include_only_known_extensions): {file_path.as_posix()}")
+            return
+
         if not extra_metadata:
             extra_metadata = {}
         repo_url = self.repo_url
