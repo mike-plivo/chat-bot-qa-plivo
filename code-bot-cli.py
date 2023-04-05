@@ -22,6 +22,9 @@ class CodeBot(object):
                            "csharp": "CSharp",
                            "php": "PHP",
                            "ruby": "Ruby",
+                           'go': 'Go',
+                           'c': 'C',
+                           'cpp': 'C++',
                            }
     def __init__(self, code="python"):
         self._db = None
