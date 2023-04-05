@@ -102,6 +102,7 @@ class BaseCodeBot(object):
         for line in question.splitlines():
             for l in line.split('. '):
                 q.append(l.strip()+'.\n')
+        q.append('Use the programming language {}.\n'.format(self._code_name))
         return '- '.join(q)
 
     def query(self, question):
@@ -121,20 +122,22 @@ class BaseCodeBot(object):
 
     def query_and_print_result(self, question):
         result = self.query(question)
-        cr = "\n"
+        data_sources = set(['- '+doc.metadata['source'] for doc in result['source_documents']])
+        data_sources = '\n'.join(tuple(data_sources))
         output_text = f"""
-## Question
+# Question
 {question}
 
-## Answer
+# Answer
 {result['answer']}
 
-## References
-{cr.join(list(set([doc.metadata['source'] for doc in result['source_documents']])))}
+# Sources 
+{data_sources}
+
 """
         if self.is_debug_enabled():
-            msg = f'\n\n## Cost\n{result["stats"]}\n'
-            msg += f'\n\n## Debug\n{result}\n'
+            msg = f'\n\n# Cost\n{result["stats"]}\n'
+            msg += f'\n\n# Debug\n{result}\n'
             output_text += msg
 
         print(output_text)
