@@ -59,7 +59,7 @@ class BaseCodeBot(object):
 
     def get_db(self):
         if self._db is None:
-            with open(settings.GIT_FAISS_VECTOR_DATABASE, "rb") as f:
+            with open(settings.CODEBOT_FAISS_VECTOR_DATABASE, "rb") as f:
                 self._db = pickle.load(f)
         return self._db
 
@@ -83,16 +83,16 @@ class BaseCodeBot(object):
 
     def _get_llm_chain(self):
         if self._chain is None:
-            git_system_template = settings.GIT_SYSTEM_TEMPLATE.replace('{code_name}', self._code_name)
+            git_system_template = settings.CODEBOT_SYSTEM_TEMPLATE.replace('{code_name}', self._code_name)
             messages = [
                 SystemMessagePromptTemplate.from_template(git_system_template),
                 HumanMessagePromptTemplate.from_template("{question}")
             ]
             chat_prompt = ChatPromptTemplate.from_messages(messages)
             chain_type_kwargs = {"prompt": chat_prompt}
-            llm = ChatOpenAI(model_name=settings.GIT_OPENAI_MODEL, 
-                             temperature=settings.GIT_OPENAI_TEMPERATURE, 
-                             max_tokens=settings.GIT_OPENAI_MAX_TOKENS)
+            llm = ChatOpenAI(model_name=settings.CODEBOT_OPENAI_MODEL, 
+                             temperature=settings.CODEBOT_OPENAI_TEMPERATURE, 
+                             max_tokens=settings.CODEBOT_OPENAI_MAX_TOKENS)
             self._chain = RetrievalQAWithSourcesChain.from_chain_type(
                 llm=llm,
                 chain_type="stuff",
@@ -188,6 +188,21 @@ class BaseCodeBot(object):
 
 
 class CodeBot(BaseCodeBot):
+    '''
+    CodeBot is a chatbot that answers programming questions.
+
+    # Programming mode
+    bot = CodeBot()
+    bot.set_debug(True)
+    result = bot.ask(code="ruby", question="send an SMS")
+
+    # Prompt mode
+    bot = CodeBot()
+    bot.run()
+
+    # CLI mode
+    CodeBot.cli()
+    '''
     def __init__(self, code="python", banner='CodeBot'):
         self._banner = f'<p fg="ansiwhite">{banner}</p><p fg="ansired"> ("/help" for help)</p>'
         super().__init__(code)
@@ -196,7 +211,7 @@ class CodeBot(BaseCodeBot):
     @classmethod
     def cli(cls, code="python", banner='CodeBot'):
         parser = argparse.ArgumentParser(description="CodeBot")
-        parser.add_argument("-a", "--ask", type=str, default="", help="Question to ask (required in CLI mode)")
+        parser.add_argument("-a", "--ask", type=str, default="", help="Question to ask (required in CLI mode). Use '-' for stdin.")
         parser.add_argument("-c", "--code", type=str, choices=cls.get_available_languages(), default=code, help=f"Programming language to use - default: {code}")
         parser.add_argument("-m", "--mode", type=str, choices=['prompt', 'cli'], default="prompt", help="CLI mode or Prompt mode - default: prompt")
         parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode (show OpenAI API cost and response)")
@@ -207,6 +222,8 @@ class CodeBot(BaseCodeBot):
         banner = args.banner
         mode = args.mode
         ask = args.ask
+        if ask == '-':
+            ask = sys.stdin.read()
         if ask and mode == 'prompt':
             cls.perror("-a/--ask cannot be use in Prompt mode")
             parser.print_help()
@@ -353,15 +370,6 @@ class CodeBot(BaseCodeBot):
 
 
 if __name__ == "__main__":
-    # API style
-    #bot = CodeBot(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
-    #bot.set_debug(True)
-    # result = bot.ask(code="ruby", question="send an SMS")
+    CodeBot.cli()
 
-    # CLI style
-    CodeBot.cli(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
-
-    # Prompt style
-    #bot = CodeBot(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
-    #bot.run()
 

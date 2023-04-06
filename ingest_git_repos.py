@@ -1,3 +1,4 @@
+import sys
 import pickle
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -10,16 +11,20 @@ from code_loader import GithubCodeLoader
 
 def ingest_docs():
     """Ingest all docs."""
+    repos = []
     loaders = []
     raw_documents = []
-    for repo in settings.GIT_REPO_URLS:
+    for repo in settings.CODEBOT_GIT_REPO_URLS:
         try:
             repo_url, branch = repo
+            repos.append(i(repo_url, branch))
         except:
-            repo_url, branch = repo, settings.GIT_DEFAULT_BRANCH
+            print(f"Invalid repo {repo}. Format should be (repo_url, branch)")
+            sys.exit(1)
 
+    for repo_url, branch in repos:
         print(f"Loading {repo_url} with branch {branch}")
-        loader = GithubCodeLoader(repo_url, local_dir=settings.GIT_REPOS_DIR, branch=branch, debug=True)
+        loader = GithubCodeLoader(repo_url, local_dir=settings.CODEBOT_GIT_REPOS_DIR, branch=branch, debug=True)
         docs = loader.load()
         if docs:
             print(f"Loaded {len(docs)} documents from {repo_url}")
@@ -35,8 +40,8 @@ def ingest_docs():
     print("Ingesting documents...")
     db = FAISS.from_documents(documents, embeddings)
     # Save vectorstore
-    print(f"Saving vectorstore {settings.GIT_FAISS_VECTOR_DATABASE}")
-    with open(settings.GIT_FAISS_VECTOR_DATABASE, "wb") as f:
+    print(f"Saving vectorstore {settings.CODEBOT_FAISS_VECTOR_DATABASE}")
+    with open(settings.CODEBOT_FAISS_VECTOR_DATABASE, "wb") as f:
         pickle.dump(db, f)
 
 

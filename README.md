@@ -19,23 +19,31 @@ pip3 install -r requirements.txt
 export OPENAI_API_KEY=sk-xxxx
 ```
 
-## Usage
-
-To use the Q&A bot, provide a user question as input. The bot will search for relevant information, generate an answer based on the context and sources, and return the answer to the user.
+## Build the FAISS vector database
+Add the git repositories you want to scan in settings.py, then execute the following command:
 ```bash
-python3 codebot.py -h
+python3 ingest_git_repos.py
 ```
 
-## Examples
+## Usage
+
+```bash
+python3 -m codebot -h
+```
 
 ### CLI mode
 ```bash
-python3 codebot.py -c python -m cli -a 'send an SMS'
+python3 -m codebot -c python -m cli -a 'send an SMS'
+```
+
+You can also use stdin for the -a/--ask option:
+```bash
+echo 'send an SMS' |python3 -m codebot -d -c python -m cli -a -
 ```
 
 ### Prompt mode
 ```bash
-python3 codebot.py -c python
+python3 -m codebot -c python
 ```
 
 - Use the `/help` command in Prompt mode for help.
@@ -43,13 +51,15 @@ python3 codebot.py -c python
 ### Debug mode
 Use the `-d` option to enable debug mode.
 
-## Building the FAISS vector database
-Add the git repositories you want to scan in settings.py, then execute the following command:
-```bash
-python3 ingest_git_repos.py
+### Use a Python module
+```python
+from codebot import CodeBot
+bot = CodeBot()
+bot.set_debug(True)
+result = bot.ask(code="python", question="send an SMS")
+print(result)
 ```
 
 ## Notes
-
 - If the bot does not know the answer, it will respond with "I don't know" and will not attempt to make up an answer.
 
