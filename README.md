@@ -38,6 +38,8 @@ python3 code-bot-cli.py -c python -m cli -a 'send an SMS'
 python3 code-bot-cli.py -c python
 ```
 
+- Use the `/help` command in Prompt mode for help.
+
 ### Debug mode
 Use the `-d` option to enable debug mode.
 
