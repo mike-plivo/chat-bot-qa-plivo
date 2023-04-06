@@ -7,7 +7,6 @@ def main():
                               branch='master')
     documents = loader.load()
     for doc in documents:
-        #print(doc.page_content[:50]) # content isample of the file
         print(doc.metadata) # metadata of the file
 
 if __name__ == '__main__':

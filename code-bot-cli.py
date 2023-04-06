@@ -1,6 +1,8 @@
 import sys
 import pickle
 import traceback
+import argparse
+import json
 from prompt_toolkit import print_formatted_text, HTML
 from prompt_toolkit import prompt
 from langchain.prompts.chat import (
@@ -61,20 +63,23 @@ class BaseCodeBot(object):
                 self._db = pickle.load(f)
         return self._db
 
-    def get_available_languages(self):
-        return self.available_languages.keys()
+    @classmethod
+    def get_available_languages(cls):
+        return cls.available_languages.keys()
 
-    def is_language_supported(self, code):
-        return code.lower() in self.get_available_languages()
+    @classmethod
+    def is_language_supported(cls, code):
+        return code.lower() in cls.get_available_languages()
+
+    @classmethod
+    def get_language_name(cls, code):
+        try:
+            return cls.available_languages[code.lower()]
+        except Exception:
+            return code
 
     def is_active_language(self, code):
         return self._code == code.lower()
-
-    def get_language_name(self, code):
-        try:
-            return self.available_languages[code.lower()]
-        except Exception:
-            return code
 
     def _get_llm_chain(self):
         if self._chain is None:
@@ -105,7 +110,27 @@ class BaseCodeBot(object):
         q.append('Use the programming language {}.\n'.format(self._code_name))
         return '- '.join(q)
 
-    def query(self, question):
+    @classmethod
+    def perror(cls, error):
+        print_formatted_text(HTML('<p fg="ansired">ERROR: {}</p>'.format(error)))
+        print('\n')
+
+    def ask(self, code, question):
+        if not self.is_language_supported(code):
+            return json.dumps({"status": "error",
+                               "error": "Language {} is not supported".format(code)})
+        if not question:
+            return json.dumps({"status": "error",
+                               "error": "Question is required"})
+        if not self.is_active_language(code):
+            del self._chain
+            self._chain = None
+            self.set_language(code)
+        data = self.query_as_dict(question)
+        return json.dumps({"status": "success",
+                           'response': data})
+
+    def _query(self, question):
         question = self.parse_question(question)
         result = {}
         if self.is_debug_enabled():
@@ -120,8 +145,22 @@ class BaseCodeBot(object):
             result = self._get_llm_chain()(question)
         return result
 
-    def query_and_print_result(self, question):
-        result = self.query(question)
+    def query_as_dict(self, question):
+        result = self._query(question)
+        data_sources = list(set([doc.metadata['source'] for doc in result['source_documents']]))
+        response = {'question': question,
+                    'answer': result['answer'], 
+                    'language': self._code, 
+                    'language_name': self._code_name,
+                    'sources': data_sources,
+                    }
+        if self.is_debug_enabled():
+            response['stats'] = result['stats']
+            response['raw_response'] = str(result)
+        return response
+
+    def query_as_text(self, question):
+        result = self._query(question)
         data_sources = set(['- '+doc.metadata['source'] for doc in result['source_documents']])
         data_sources = '\n'.join(tuple(data_sources))
         output_text = f"""
@@ -137,10 +176,14 @@ class BaseCodeBot(object):
 """
         if self.is_debug_enabled():
             msg = f'\n\n# Cost\n{result["stats"]}\n'
-            msg += f'\n\n# Debug\n{result}\n'
+            msg += f'\n\n# Raw response\n{result}\n'
             output_text += msg
 
-        print(output_text)
+        return output_text
+
+    def query_and_print_result(self, question):
+        print(self.query_as_text(question))
+
 
 
 
@@ -150,9 +193,43 @@ class CodeBot(BaseCodeBot):
         super().__init__(code)
         self._set_cost = True
 
-    def perror(self, error):
-        print_formatted_text(HTML('<p fg="ansired">{}</p>'.format(error)))
-        print('\n')
+    @classmethod
+    def cli(cls, code="python", banner='CodeBot'):
+        parser = argparse.ArgumentParser(description="CodeBot")
+        parser.add_argument("-a", "--ask", type=str, default="", help="Question to ask (required in CLI mode)")
+        parser.add_argument("-c", "--code", type=str, choices=cls.get_available_languages(), default=code, help=f"Programming language to use - default: {code}")
+        parser.add_argument("-m", "--mode", type=str, choices=['prompt', 'cli'], default="prompt", help="CLI mode or Prompt mode - default: prompt")
+        parser.add_argument("-d", "--debug", action="store_true", help="Enable debug mode (show OpenAI API cost and response)")
+        parser.add_argument("-b", "--banner", type=str, default="CodeBot", help=f"Banner text (only used in prompt mode) - default {banner}")
+        args = parser.parse_args()
+        _code = args.code.lower()
+        debug = args.debug
+        banner = args.banner
+        mode = args.mode
+        ask = args.ask
+        if ask and mode == 'prompt':
+            cls.perror("-a/--ask cannot be use in Prompt mode")
+            parser.print_help()
+            sys.exit(1)
+        if mode == 'cli' and not ask:
+            cls.perror("-a/--ask is required in CLI mode")
+            parser.print_help()
+            sys.exit(1)
+        bot = cls(code=_code, banner=banner)
+        debug is True and bot.set_debug(True)
+        if mode == 'prompt':
+            bot.run()
+            return
+        elif mode == 'cli':
+            bot.cli_run(ask)
+            return
+
+        parser.print_help()
+        sys.exit(1)
+
+    def cli_run(self, question):
+        self.query_and_print_result(question)
+        sys.exit(0)
 
     def run(self):
         print_formatted_text(HTML(self._banner))
@@ -167,7 +244,7 @@ class CodeBot(BaseCodeBot):
                 traceback.print_exc()
                 continue
 
-    def _cmd_exit(self, msg):
+    def _cmd_exit(self, msg='Bye!'):
         print(msg)
         sys.exit(0)
 
@@ -270,10 +347,21 @@ class CodeBot(BaseCodeBot):
                 return
             self._cmd_debug_change(_debug)
         else:
+            if query.strip() == "":
+                return
             self.perror("Unknown command, type '/help' for help")
 
 
 if __name__ == "__main__":
-    bot = CodeBot(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
-    bot.run()
+    # API style
+    #bot = CodeBot(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
+    #bot.set_debug(True)
+    # result = bot.ask(code="ruby", question="send an SMS")
+
+    # CLI style
+    CodeBot.cli(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
+
+    # Prompt style
+    #bot = CodeBot(code=settings.GIT_BOT_DEFAULT_LANGUAGE, banner=settings.GIT_BOT_BANNER)
+    #bot.run()
 
