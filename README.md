@@ -23,19 +23,19 @@ export OPENAI_API_KEY=sk-xxxx
 
 To use the Q&A bot, provide a user question as input. The bot will search for relevant information, generate an answer based on the context and sources, and return the answer to the user.
 ```bash
-python3 code-bot-cli.py -h
+python3 codebot.py -h
 ```
 
 ## Examples
 
 ### CLI mode
 ```bash
-python3 code-bot-cli.py -c python -m cli -a 'send an SMS'
+python3 codebot.py -c python -m cli -a 'send an SMS'
 ```
 
 ### Prompt mode
 ```bash
-python3 code-bot-cli.py -c python
+python3 codebot.py -c python
 ```
 
 - Use the `/help` command in Prompt mode for help.
