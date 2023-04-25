@@ -1,11 +1,13 @@
 # chat-bot-qa-plivo
-Chat Bot for Plivo APIs and SDKs.
+Chat Bots for Plivo APIs and SDKs.
 
-This Q&A bot is designed to provide coding implementation answers to user questions using information extracted from Plivo APIs and SDKs. 
+*CodeBot: This Q&A bot is designed to provide coding implementation answers to user questions using information extracted from the Plivo APIs and SDKs. 
+
+*FAQBot: This Q&A bot is designed to answer to user questions using information extracted from the Plivo documentation, APIs and SDKs. 
 
 It utilizes the OpenAI GPT-3.5-turbo model and a pre-built FAISS vector database to search for relevant information and answer user questions in a concise and accurate manner.
 
-You can ingest Github repositories into The FAISS vector database.
+You can ingest Github repositories and websites (via sitemap) into The FAISS vector database.
 
 ## Installation
 
@@ -22,10 +24,10 @@ export OPENAI_API_KEY=sk-xxxx
 ## Build the FAISS vector database
 Add the git repositories you want to scan in settings.py, then execute the following command:
 ```bash
-python3 ingest_git_repos.py
+python3 ingest.py
 ```
 
-## Usage
+## Usage CodeBot
 
 ```bash
 python3 -m codebot -h
@@ -57,6 +59,41 @@ from codebot import CodeBot
 bot = CodeBot()
 bot.set_debug(True)
 result = bot.ask(code="python", question="send an SMS")
+print(result)
+```
+
+## Usage FAQBot
+
+```bash
+python3 -m faqbot -h
+```
+
+### CLI mode
+```bash
+python3 -m faqbot -m cli -a 'How to send an SMS?'
+```
+
+You can also use stdin for the -a/--ask option:
+```bash
+echo 'How to send an SMS?' |python3 -m faqbot -d -c python -m cli -a -
+```
+
+### Prompt mode
+```bash
+python3 -m faqbot
+```
+
+- Use the `/help` command in Prompt mode for help.
+
+### Debug mode
+Use the `-d` option to enable debug mode.
+
+### Use a Python module
+```python
+from faqbot import FAQBot
+bot = FAQBot()
+bot.set_debug(True)
+result = bot.ask(question="How to send an SMS?")
 print(result)
 ```
 
