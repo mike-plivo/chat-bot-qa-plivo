@@ -22,7 +22,7 @@ export OPENAI_API_KEY=sk-xxxx
 ```
 
 ## Build the FAISS vector database
-Add the git repositories you want to scan in settings.py, then execute the following command:
+Add the git repositories and the sitemap urls you want to scan in settings.py, then execute the following command:
 ```bash
 python3 ingest.py
 ```
