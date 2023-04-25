@@ -3,17 +3,21 @@ import pickle
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.faiss import FAISS
-from langchain.document_loaders.directory import DirectoryLoader
+from langchain.document_loaders.sitemap import SitemapLoader
 
-import settings
 from code_loader import GithubCodeLoader
+import settings
 
 
-def ingest_docs():
+def ingest_docs_from_github_repos():
     """Ingest all docs."""
     repos = []
     loaders = []
     raw_documents = []
+    if not settings.CODEBOT_GIT_REPO_URLS:
+        print("No repos specified in settings.CODEBOT_GIT_REPO_URLS")
+        return raw_documents
+
     for repo in settings.CODEBOT_GIT_REPO_URLS:
         try:
             repo_url, branch = repo
@@ -29,13 +33,37 @@ def ingest_docs():
         if docs:
             print(f"Loaded {len(docs)} documents from {repo_url}")
             raw_documents.extend(docs)
+    return raw_documents
 
-    print(f"Loaded total {len(raw_documents)} documents")
+
+def ingest_docs_from_sitemaps():
+    loaders = []
+    raw_documents = []
+    if not settings.CODEBOT_SITEMAP_URLS:
+        print("No sitemap urls specified in settings.CODEBOT_SITEMAP_URLS")
+        return raw_documents
+
+    for sitemap_url in settings.CODEBOT_SITEMAP_URLS:
+        print(f"Loading {sitemap_url}")
+        loader = SitemapLoader(web_path=sitemap_url, debug=True)
+        docs = loader.load()
+        if docs:
+            print(f"Loaded {len(docs)} documents from {sitemap_url}")
+            raw_documents.extend(docs)
+    return raw_documents
+
+def ingest_all_docs():
+    """Ingest all docs."""
+    docs = []
+    docs.extend(ingest_docs_from_sitemaps())
+    docs.extend(ingest_docs_from_github_repos())
+
+    print(f"Loaded total {len(docs)} documents")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200,
     )
-    documents = text_splitter.split_documents(raw_documents)
+    documents = text_splitter.split_documents(docs)
     embeddings = OpenAIEmbeddings()
     print("Ingesting documents...")
     db = FAISS.from_documents(documents, embeddings)
@@ -45,7 +73,6 @@ def ingest_docs():
         pickle.dump(db, f)
 
 
-
 if __name__ == "__main__":
-    ingest_docs()
+    ingest_all_docs()
 
