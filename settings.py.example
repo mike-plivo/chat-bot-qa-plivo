@@ -14,7 +14,7 @@ CODEBOT_GIT_REPO_URLS = [
         ('git@github.com:plivo/plivo-examples-php.git', 'master'),
         ('git@github.com:plivo/plivo-examples-node.git', 'master'),
 ] 
-CODEBOT_FAISS_VECTOR_DATABASE="data/github_com.faiss"
+CODEBOT_FAISS_VECTOR_DATABASE="data/codebot.faiss"
 CODEBOT_SYSTEM_TEMPLATE='''
 - Write an application with the programming language {code_name} using the Plivo SDK with the requirements provided in the user question.
 - The answer should always produce code that solves the problem.
@@ -29,4 +29,20 @@ CODEBOT_SYSTEM_TEMPLATE='''
 CODEBOT_OPENAI_MODEL="gpt-3.5-turbo"
 CODEBOT_OPENAI_TEMPERATURE=0.0
 CODEBOT_OPENAI_MAX_TOKENS=2000
+
+
+FAQBOT_FAISS_VECTOR_DATABASE="data/codebot.faiss"
+FAQBOT_SYSTEM_TEMPLATE='''
+- Act as a knowledge base and use the Plivo API and documentation to answer the question.
+- Always include the complete response in the answer.
+- If you don't know the answer, just say that "I don't know", don't try to make up an answer.
+- 'Webhook' keyword is synonymous to 'callback', 'API' is synonymous to 'Plivo API', 'SDK' is synonymous to 'Plivo SDK', 'XML' is synonymous to 'Plivo XML'.
+- Format the answer with markdown.
+- Analyze the following information to answer the question.
+----------------
+{summaries}
+'''
+FAQBOT_OPENAI_MODEL="gpt-3.5-turbo"
+FAQBOT_OPENAI_TEMPERATURE=0.0
+FAQBOT_OPENAI_MAX_TOKENS=2000
 
