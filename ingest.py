@@ -1,6 +1,5 @@
 import os
 import sys
-import pickle
 from langchain.document_loaders.sitemap import SitemapLoader
 
 from code_loader import GithubCodeLoader

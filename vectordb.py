@@ -1,3 +1,4 @@
+import pickle
 from langchain.vectorstores.faiss import FAISS
 from langchain.vectorstores.redis import Redis
 from langchain.embeddings import OpenAIEmbeddings
