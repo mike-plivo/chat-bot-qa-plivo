@@ -1,3 +1,4 @@
+import os
 import sys
 import pickle
 import traceback
@@ -31,6 +32,10 @@ class BaseCodeBot(object):
     def __init__(self, code="python"):
         self._db = None
         self._debug = False
+        k = os.getenv("OPENAI_API_KEY")
+        if not k:
+            raise Exception("OPENAI_API_KEY not set")
+        self._chain = None
         self.set_language(code)
         self.get_db()
 
@@ -59,8 +64,7 @@ class BaseCodeBot(object):
 
     def get_db(self):
         if self._db is None:
-            with open(settings.CODEBOT_FAISS_VECTOR_DATABASE, "rb") as f:
-                self._db = pickle.load(f)
+            self._db = vectordb.Loader.load(settings.FAQBOT_VECTOR_DATABASE)
         return self._db
 
     @classmethod

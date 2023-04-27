@@ -1,20 +1,27 @@
 CODEBOT_GIT_REPOS_DIR="data/git_repos"
 CODEBOT_GIT_REPO_URLS = [
         # format is (repo_url, branch)
-        ('git@github.com:plivo/plivo-python.git', 'master'),
-        ('git@github.com:plivo/plivo-java.git', 'master'),
-        ('git@github.com:plivo/plivo-ruby.git', 'master'),
-        ('git@github.com:plivo/plivo-dotnet.git', 'master'),
-        ('git@github.com:plivo/plivo-php.git', 'master'),
-        ('git@github.com:plivo/plivo-node.git', 'master'),
-        ('git@github.com:plivo/plivo-examples-python.git', 'master'),
-        ('git@github.com:plivo/plivo-examples-java.git', 'master'),
-        ('git@github.com:plivo/plivo-examples-ruby.git', 'master'),
-        ('git@github.com:plivo/plivo-examples-dotnet.git', 'master'),
-        ('git@github.com:plivo/plivo-examples-php.git', 'master'),
-        ('git@github.com:plivo/plivo-examples-node.git', 'master'),
+        ('https://github.com/plivo/plivo-python.git', 'master'),
+        ('https://github.com/plivo/plivo-java.git', 'master'),
+        ('https://github.com/plivo/plivo-ruby.git', 'master'),
+        ('https://github.com/plivo/plivo-dotnet.git', 'master'),
+        ('https://github.com/plivo/plivo-php.git', 'master'),
+        ('https://github.com/plivo/plivo-node.git', 'master'),
+        ('https://github.com/plivo/plivo-go.git', 'master'),
+        ('https://github.com/plivo/plivo-examples-python.git', 'master'),
+        ('https://github.com/plivo/plivo-examples-java.git', 'master'),
+        ('https://github.com/plivo/plivo-examples-ruby.git', 'master'),
+        ('https://github.com/plivo/plivo-examples-dotnet.git', 'master'),
+        ('https://github.com/plivo/plivo-examples-php.git', 'master'),
+        ('https://github.com/plivo/plivo-examples-node.git', 'master'),
 ] 
-CODEBOT_FAISS_VECTOR_DATABASE="data/codebot.faiss"
+
+CODEBOT_SITEMAP_URLS = [
+        "https://www.plivo.com/sitemap.xml",
+]
+
+#CODEBOT_VECTOR_DATABASE="redis://redis:6379"
+CODEBOT_VECTOR_DATABASE="data/codebot.faiss"
 CODEBOT_SYSTEM_TEMPLATE='''
 - Write an application with the programming language {code_name} using the Plivo SDK with the requirements provided in the user question.
 - The answer should always produce code that solves the problem.
@@ -31,7 +38,8 @@ CODEBOT_OPENAI_TEMPERATURE=0.0
 CODEBOT_OPENAI_MAX_TOKENS=2000
 
 
-FAQBOT_FAISS_VECTOR_DATABASE="data/codebot.faiss"
+#FAQBOT_VECTOR_DATABASE="redis://redis:6379"
+FAQBOT_VECTOR_DATABASE="data/codebot.faiss"
 FAQBOT_SYSTEM_TEMPLATE='''
 - Act as a knowledge base and use the Plivo API and documentation to answer the question.
 - Always include the complete response in the answer.

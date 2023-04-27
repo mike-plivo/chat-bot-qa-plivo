@@ -4,3 +4,8 @@ pygments
 binaryornot
 gitignore_parser
 chardet
+redis
+openai
+tiktoken
+lxml
+bs4

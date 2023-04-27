@@ -1,3 +1,4 @@
+import os
 import sys
 import pickle
 import traceback
@@ -14,6 +15,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.callbacks import get_openai_callback
 
+import vectordb
 import settings
 
 
@@ -22,6 +24,9 @@ class BaseFAQBot(object):
         self._db = None
         self._debug = False
         self._chain = None
+        k = os.getenv("OPENAI_API_KEY")
+        if not k:
+            raise Exception("OPENAI_API_KEY not set")
         self.get_db()
 
     def set_debug(self, flag):
@@ -41,8 +46,7 @@ class BaseFAQBot(object):
 
     def get_db(self):
         if self._db is None:
-            with open(settings.FAQBOT_FAISS_VECTOR_DATABASE, "rb") as f:
-                self._db = pickle.load(f)
+            self._db = vectordb.Loader.load(settings.FAQBOT_VECTOR_DATABASE)
         return self._db
 
     def _get_llm_chain(self):

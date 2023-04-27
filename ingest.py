@@ -1,11 +1,10 @@
+import os
 import sys
 import pickle
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.faiss import FAISS
 from langchain.document_loaders.sitemap import SitemapLoader
 
 from code_loader import GithubCodeLoader
+from vectordb import Ingestor
 import settings
 
 
@@ -21,7 +20,7 @@ def ingest_docs_from_github_repos():
     for repo in settings.CODEBOT_GIT_REPO_URLS:
         try:
             repo_url, branch = repo
-            repos.append(i(repo_url, branch))
+            repos.append((repo_url, branch))
         except:
             print(f"Invalid repo {repo}. Format should be (repo_url, branch)")
             sys.exit(1)
@@ -45,7 +44,7 @@ def ingest_docs_from_sitemaps():
 
     for sitemap_url in settings.CODEBOT_SITEMAP_URLS:
         print(f"Loading {sitemap_url}")
-        loader = SitemapLoader(web_path=sitemap_url, debug=True)
+        loader = SitemapLoader(web_path=sitemap_url)
         docs = loader.load()
         if docs:
             print(f"Loaded {len(docs)} documents from {sitemap_url}")
@@ -54,23 +53,16 @@ def ingest_docs_from_sitemaps():
 
 def ingest_all_docs():
     """Ingest all docs."""
+    k = os.getenv("OPENAI_API_KEY")
+    if not k:
+        print("OPENAI_API_KEY not set")
+        sys.exit(1)
     docs = []
     docs.extend(ingest_docs_from_sitemaps())
     docs.extend(ingest_docs_from_github_repos())
 
     print(f"Loaded total {len(docs)} documents")
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
-    )
-    documents = text_splitter.split_documents(docs)
-    embeddings = OpenAIEmbeddings()
-    print("Ingesting documents...")
-    db = FAISS.from_documents(documents, embeddings)
-    # Save vectorstore
-    print(f"Saving vectorstore {settings.CODEBOT_FAISS_VECTOR_DATABASE}")
-    with open(settings.CODEBOT_FAISS_VECTOR_DATABASE, "wb") as f:
-        pickle.dump(db, f)
+    Ingestor.ingest(settings.CODEBOT_VECTOR_DATABASE, docs)
 
 
 if __name__ == "__main__":

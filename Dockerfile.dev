@@ -1,0 +1,15 @@
+FROM alpine:latest as build
+
+RUN apk add --no-cache python3 redis py3-pip gcc g++ libc-dev git make python3-dev bash openssh
+
+WORKDIR /tmp
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN apk add --no-cache vim
+
+WORKDIR /app
+
+CMD ["sh", "-c", "while true; do sleep 1; done"]
+
