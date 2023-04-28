@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import traceback
@@ -6,7 +7,9 @@ import requests
 from flask import Flask, jsonify, request
 from faqbot import FAQBot
 
-SLACK_ENTERPRISE_ID = 'E02EJKWKQUW'
+SLACK_ENTERPRISE_ID = os.getenv('SLACK_ENTERPRISE_ID')
+if not SLACK_ENTERPRISE_ID:
+    raise Exception('SLACK_ENTERPRISE_ID not set')
 
 executor = ThreadPoolExecutor(2)
 
