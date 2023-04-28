@@ -79,10 +79,12 @@ def ask_bot():
 
 def ask_bot_async(api_id, question, response_url):
     try:
-        print({'api_id': api_id, 'question': question, 'response_url': response_url})
+        print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'started ask_bot_async'})
         bot = FAQBot()
         bot.set_debug(True)
+        print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'created bot instance'})
         result = bot.ask(question=question)
+        print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'got result from bot'})
         data = json.loads(result)
         if data['status'] == 'error':
             data['api_id'] = api_id
@@ -110,7 +112,7 @@ def ask_bot_async(api_id, question, response_url):
             sources = '\n'.join(' - '+ src for src in data['response']['sources'])
             # send response to slack
             json_response = {
-                    "text": f"*Question*: _{question}_\n*Answer*\n{answer}\n*Sources*\n{sources}\n",
+                "text": f"*Question*: _{question}_\n*Answer*\n{answer}\n*Sources*\n{sources}\n",
                 "response_type": "in_channel"
             }
             print({'api_id': api_id, 'slack_response': json_response})
@@ -118,7 +120,7 @@ def ask_bot_async(api_id, question, response_url):
             print(api_id, response_url, r.status_code)
             return
     except Exception as e:
-        print({'api_id': api_id, 'error': str(e), 'traceback': traceback.format_exc()})
+        print({'api_id': api_id, 'error': str(e), 'message': traceback.format_exc()})
         pass
     finally:
         del bot
