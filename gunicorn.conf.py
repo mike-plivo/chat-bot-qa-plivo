@@ -5,6 +5,9 @@ max_requests = 1000
 max_requests_jitter = 50
 
 log_file = "-"
+log_level = "debug"
+accesslog = "-"
+errorlog = "-"
 
 bind = "0.0.0.0:50505"
 
