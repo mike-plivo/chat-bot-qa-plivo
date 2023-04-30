@@ -2,17 +2,22 @@ import os
 import json
 import uuid
 import traceback
-from concurrent.futures import ThreadPoolExecutor
+#from concurrent.futures import ThreadPoolExecutor
+from flask_executor import Executor
 import requests
 from flask import Flask, jsonify, request
 from faqbot import FAQBot
 
 import settings
 
-executor = ThreadPoolExecutor(2)
+#executor = ThreadPoolExecutor(2)
 
 app = Flask(__name__)
 app.debug = True
+executor = Executor(app)
+app.config['EXECUTOR_TYPE'] = 'process'
+app.config['EXECUTOR_MAX_WORKERS'] = 2
+app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 
 
 def get_uuid():
@@ -80,6 +85,7 @@ def ask_bot():
     }), 200
 
 def ask_bot_async(api_id, question, response_url):
+    bot = None
     try:
         print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'started ask_bot_async'})
         bot = FAQBot()
