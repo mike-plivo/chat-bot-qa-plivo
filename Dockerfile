@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	curl \
 	ca-certificates \
 	python3 \
+	redis-server \
 	python3-pip
 RUN rm -rf /var/lib/apt/lists/* || true
 

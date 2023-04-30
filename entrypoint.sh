@@ -8,6 +8,8 @@ case "$ENV" in
 		python3 ./ingest.py
 	;;
 	"*" | "prod")
+		redis-server --daemonize yes
+		rqworker &
 		gunicorn -c ./gunicorn.conf.py app:app
 	;;
 esac

@@ -103,10 +103,8 @@ class Loader(object):
         #print(f"Loading from FAISS {self.vector_url}")
         if not os.path.exists(self.vector_url):
             raise Exception(f"FAISS file not found: {self.vector_url}")
-        print(f"Loading FAISS {self.vector_url}")
         with open(self.vector_url, "rb") as f:
             db = pickle.load(f)
-        print(f"Loaded FAISS {self.vector_url}")
         return db
 
     def run(self):

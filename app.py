@@ -2,24 +2,21 @@ import os
 import json
 import uuid
 import traceback
-#from concurrent.futures import ThreadPoolExecutor
-from flask_executor import Executor
+from redis import Redis
+from rq import Queue
+
 import requests
 from flask import Flask, jsonify, request
 from faqbot import FAQBot
 
 import settings
 
-#executor = ThreadPoolExecutor(2)
-
 app = Flask(__name__)
 app.debug = True
-executor = Executor(app)
-app.config['EXECUTOR_TYPE'] = 'process'
-app.config['EXECUTOR_MAX_WORKERS'] = 2
-app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 
-print(f"ARCH: {settings.ARCH}, UNAME: {os.uname().machine}")
+def enqueue(func, *args):
+    q = Queue(connection=Redis())
+    return q.enqueue(func, *args)
 
 
 def get_uuid():
@@ -78,18 +75,19 @@ def ask_bot():
                       'error': 'Invalid request, question is empty'})
 
     print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'Processing your question, please wait...'})
-    job = executor.submit(ask_bot_async, api_id, question, response_url)
-    print({'api_id': api_id, 'message': f"started background job ask_bot_async {job}"})
+    enqueue(ask_bot_async, api_id, question, response_url)
+    print({'api_id': api_id, 'message': f"started background job ask_bot_async"})
     
     return jsonify({
             "response_type": "in_channel",
-            "text": "Processing your question, please wait..."
+            "text": f"_Processing your question, please wait..._\n*TicketID*: {api_id}\n"
     }), 200
 
 def ask_bot_async(api_id, question, response_url):
     bot = None
     try:
         print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'started ask_bot_async'})
+        print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'creating bot instance'})
         bot = FAQBot()
         bot.set_debug(True)
         print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'created bot instance'})
@@ -100,7 +98,7 @@ def ask_bot_async(api_id, question, response_url):
             data['api_id'] = api_id
             print(data)
             json_response = {
-                "text": f"Oops, something went wrong: {data['error']}",
+                "text": f"Oops, something went wrong: {data['error']}\n*TicketID*: {api_id}\n",
                 "response_type": "in_channel"
             }
             print({'api_id': api_id, 'slack_response': json_response})
@@ -122,7 +120,7 @@ def ask_bot_async(api_id, question, response_url):
             sources = '\n'.join(' - '+ src for src in data['response']['sources'])
             # send response to slack
             json_response = {
-                "text": f"*Question*: _{question}_\n*Answer*\n{answer}\n*Sources*\n{sources}\n",
+                "text": f"*Question*: _{question}_\n*Answer*\n{answer}\n*Sources*\n{sources}\n*TicketID*: {api_id}\n",
                 "response_type": "in_channel"
             }
             print({'api_id': api_id, 'slack_response': json_response})
@@ -135,7 +133,7 @@ def ask_bot_async(api_id, question, response_url):
     finally:
         del bot
 
-    json_response = {"text": f"Oops, something went wrong: {str(e)}", "response_type": "in_channel"}
+    json_response = {"text": f"Oops, something went wrong: {str(e)}\n*TicketID*: {api_id}\n", "response_type": "in_channel"}
     print({'api_id': api_id, 'slack_response': json_response})
     r = requests.post(response_url, json=json_response)
     print(api_id, response_url, r.status_code)
