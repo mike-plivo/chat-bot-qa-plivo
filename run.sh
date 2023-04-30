@@ -41,7 +41,6 @@ if [ "$MYENV" = "prod" ] || [ "$MYENV" = "dev" ]; then
 	extra_args="-p 50505:50505"
 fi
 
-set -x
 docker run --platform "linux/${ARCH}" \
 	-ti \
 	-e SLACK_TOKEN_ID="$SLACK_TOKEN_ID" \

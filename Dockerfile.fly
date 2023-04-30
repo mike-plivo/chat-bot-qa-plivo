@@ -17,6 +17,7 @@ COPY entrypoint.sh .
 COPY requirements.txt .
 COPY *.py .
 RUN mkdir data || true
+COPY data/codebot.faiss.amd64 /app/data/codebot.faiss.amd64
 RUN pip3 install --no-cache-dir  -r requirements.txt
 RUN chmod 755 ./entrypoint.sh
 

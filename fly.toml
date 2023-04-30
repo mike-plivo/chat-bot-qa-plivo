@@ -18,3 +18,16 @@ primary_region = "iad"
     interval = "15s"
     timeout = "2s"
     grace_period = "5s"
+
+[build]
+  dockerfile = "Dockerfile.fly"
+  [build.args]
+    ARCH="amd64"
+
+[env]
+  OPENAI_MODEL="gpt-4"
+  VECTOR_DATABASE="data/codebot.faiss.amd64"
+  ENV="prod"
+  ARCH="amd64"
+  
+
