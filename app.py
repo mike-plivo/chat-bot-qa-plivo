@@ -40,14 +40,16 @@ def index():
     return success({'api_id': api_id,
                     'message': 'Welcome to Plivo FAQBot API'})
 
-@app.route('/ask', methods=['GET', 'POST'])
+@app.route('/ask', methods=['POST'])
 def ask_bot():
     api_id = get_uuid()
     question = ''
     try:
         if request.method == 'POST':
-            enterprise_id = request.form['enterprise_id']
-            if enterprise_id != settings.SLACK_ENTERPRISE_ID:
+            print({'api_id': api_id, 'message': str(request.form)})
+            try:
+                token_id = request.form['token']
+            except KeyError:
                 return denied({'api_id': api_id})
             if token_id != settings.SLACK_TOKEN_ID:
                 return denied({'api_id': api_id})
