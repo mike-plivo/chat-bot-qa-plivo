@@ -129,11 +129,16 @@ def ask_bot_async(api_id, question, response_url):
             return
     except Exception as e:
         print({'api_id': api_id, 'error': str(e), 'message': traceback.format_exc()})
-        pass
+        json_response = {"text": f"*TicketID*: {api_id}\n*Question*: _{question}_\n*Answer*\nOops, something went wrong: str(e)\n", "response_type": "in_channel"}
+        print({'api_id': api_id, 'slack_response': json_response})
+        r = requests.post(response_url, json=json_response)
+        print(api_id, response_url, r.status_code)
+        return
     finally:
-        del bot
+        try: del bot
+        except: pass
 
-    json_response = {"text": f"*TicketID*: {api_id}\n*Question*: _{question}_\n*Answer*\nOops, something went wrong: {str(e)}\n", "response_type": "in_channel"}
+    json_response = {"text": f"*TicketID*: {api_id}\n*Question*: _{question}_\n*Answer*\nOops, something went wrong: unknown error\n", "response_type": "in_channel"}
     print({'api_id': api_id, 'slack_response': json_response})
     r = requests.post(response_url, json=json_response)
     print(api_id, response_url, r.status_code)
