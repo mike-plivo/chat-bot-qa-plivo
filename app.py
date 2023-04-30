@@ -7,9 +7,7 @@ import requests
 from flask import Flask, jsonify, request
 from faqbot import FAQBot
 
-SLACK_ENTERPRISE_ID = os.getenv('SLACK_ENTERPRISE_ID')
-if not SLACK_ENTERPRISE_ID:
-    raise Exception('SLACK_ENTERPRISE_ID not set')
+import settings
 
 executor = ThreadPoolExecutor(2)
 
@@ -49,7 +47,9 @@ def ask_bot():
     try:
         if request.method == 'POST':
             enterprise_id = request.form['enterprise_id']
-            if enterprise_id != SLACK_ENTERPRISE_ID:
+            if enterprise_id != settings.SLACK_ENTERPRISE_ID:
+                return denied({'api_id': api_id})
+            if token_id != settings.SLACK_TOKEN_ID:
                 return denied({'api_id': api_id})
             cmd = request.form['command']
             if cmd != '/askplivo':

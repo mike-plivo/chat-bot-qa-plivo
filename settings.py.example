@@ -1,3 +1,7 @@
+OPENAI_MODEL="gpt-3.5-turbo"
+VECTOR_DATABASE="data/codebot.faiss.${ARCH}"
+#VECTOR_DATABASE="redis://redis:6379"
+
 CODEBOT_GIT_REPOS_DIR="data/git_repos"
 CODEBOT_GIT_REPO_URLS = [
         # format is (repo_url, branch)
@@ -20,8 +24,6 @@ CODEBOT_SITEMAP_URLS = [
         "https://www.plivo.com/sitemap.xml",
 ]
 
-#CODEBOT_VECTOR_DATABASE="redis://redis:6379"
-CODEBOT_VECTOR_DATABASE="data/codebot.faiss"
 CODEBOT_SYSTEM_TEMPLATE='''
 - Write an application with the programming language {code_name} using the Plivo SDK with the requirements provided in the user question.
 - The answer should always produce code that solves the problem.
@@ -33,13 +35,11 @@ CODEBOT_SYSTEM_TEMPLATE='''
 ----------------
 {summaries}
 '''
-CODEBOT_OPENAI_MODEL="gpt-3.5-turbo"
+CODEBOT_OPENAI_MODEL=OPENAI_MODEL
 CODEBOT_OPENAI_TEMPERATURE=0.0
 CODEBOT_OPENAI_MAX_TOKENS=2000
 
 
-#FAQBOT_VECTOR_DATABASE="redis://redis:6379"
-FAQBOT_VECTOR_DATABASE="data/codebot.faiss"
 FAQBOT_SYSTEM_TEMPLATE='''
 - Act as a knowledge base and use the Plivo API and documentation to answer the question.
 - Always include the complete response in the answer.
@@ -50,7 +50,32 @@ FAQBOT_SYSTEM_TEMPLATE='''
 ----------------
 {summaries}
 '''
-FAQBOT_OPENAI_MODEL="gpt-3.5-turbo"
+FAQBOT_OPENAI_MODEL=OPENAI_MODEL
 FAQBOT_OPENAI_TEMPERATURE=0.0
 FAQBOT_OPENAI_MAX_TOKENS=2000
 
+# import variables from environment
+import os
+
+_OPENAI_MODEL = os.getenv('OPENAI_MODEL')
+if _OPENAI_MODEL:
+    OPENAI_MODEL = _OPENAI_MODEL
+    CODEBOT_OPENAI_MODEL = OPENAI_MODEL
+    FAQBOT_OPENAI_MODEL = OPENAI_MODEL
+
+SLACK_TOKEN_ID = os.getenv('SLACK_TOKEN_ID')
+if not SLACK_TOKEN_ID:
+    raise Exception('SLACK_TOKEN_ID not set')
+SLACK_ENTERPRISE_ID = os.getenv('SLACK_ENTERPRISE_ID')
+if not SLACK_ENTERPRISE_ID:
+    raise Exception('SLACK_ENTERPRISE_ID not set')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+if not OPENAI_API_KEY:
+    raise Exception('OPENAI_API_KEY not set')
+
+ARCH = os.uname().machine
+if ARCH == 'x86_64':
+    ARCH = 'amd64'
+if ARCH not in ['amd64', 'arm64']:
+    raise Exception('Unsupported architecture: {}'.format(ARCH))
+VECTOR_DATABASE=VECTOR_DATABASE.replace('${ARCH}', ARCH)

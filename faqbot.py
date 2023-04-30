@@ -45,7 +45,7 @@ class BaseFAQBot(object):
 
     def get_db(self):
         if self._db is None:
-            self._db = vectordb.Loader.load(settings.FAQBOT_VECTOR_DATABASE)
+            self._db = vectordb.Loader.load(settings.VECTOR_DATABASE)
         return self._db
 
     def _get_llm_chain(self):

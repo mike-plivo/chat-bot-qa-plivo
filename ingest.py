@@ -61,7 +61,7 @@ def ingest_all_docs():
     docs.extend(ingest_docs_from_github_repos())
 
     print(f"Loaded total {len(docs)} documents")
-    Ingestor.ingest(settings.CODEBOT_VECTOR_DATABASE, docs)
+    Ingestor.ingest(settings.VECTOR_DATABASE, docs)
 
 
 if __name__ == "__main__":
