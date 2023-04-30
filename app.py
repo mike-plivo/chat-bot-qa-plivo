@@ -80,7 +80,7 @@ def ask_bot():
     
     return jsonify({
             "response_type": "in_channel",
-            "text": f"_Processing your question, please wait..._\n*TicketID*: {api_id}\n"
+            "text": f"*TicketID*: {api_id}\n_Processing your question, please wait..._\n"
     }), 200
 
 def ask_bot_async(api_id, question, response_url):
@@ -98,7 +98,7 @@ def ask_bot_async(api_id, question, response_url):
             data['api_id'] = api_id
             print(data)
             json_response = {
-                "text": f"Oops, something went wrong: {data['error']}\n*TicketID*: {api_id}\n",
+                "text": f"*TicketID*: {api_id}\n*Question*: _{question}_\nOops, something went wrong: {data['error']}\n",
                 "response_type": "in_channel"
             }
             print({'api_id': api_id, 'slack_response': json_response})
@@ -120,7 +120,7 @@ def ask_bot_async(api_id, question, response_url):
             sources = '\n'.join(' - '+ src for src in data['response']['sources'])
             # send response to slack
             json_response = {
-                "text": f"*Question*: _{question}_\n*Answer*\n{answer}\n*Sources*\n{sources}\n*TicketID*: {api_id}\n",
+                "text": f"*TicketID*: {api_id}\n*Question*: _{question}_\n*Answer*\n{answer}\n*Sources*\n{sources}\n",
                 "response_type": "in_channel"
             }
             print({'api_id': api_id, 'slack_response': json_response})
@@ -133,7 +133,7 @@ def ask_bot_async(api_id, question, response_url):
     finally:
         del bot
 
-    json_response = {"text": f"Oops, something went wrong: {str(e)}\n*TicketID*: {api_id}\n", "response_type": "in_channel"}
+    json_response = {"text": f"*TicketID*: {api_id}\n*Question*: _{question}_\n*Answer*\nOops, something went wrong: {str(e)}\n", "response_type": "in_channel"}
     print({'api_id': api_id, 'slack_response': json_response})
     r = requests.post(response_url, json=json_response)
     print(api_id, response_url, r.status_code)
