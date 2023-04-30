@@ -19,6 +19,8 @@ app.config['EXECUTOR_TYPE'] = 'process'
 app.config['EXECUTOR_MAX_WORKERS'] = 2
 app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
 
+print(f"ARCH: {settings.ARCH}, UNAME: {os.uname().machine}")
+
 
 def get_uuid():
     return str(uuid.uuid4())
