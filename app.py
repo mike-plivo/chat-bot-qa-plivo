@@ -12,9 +12,9 @@ import settings
 app = Flask(__name__)
 app.debug = True
 
-def enqueue(func, *args):
+def enqueue_question(func, api_id, question, response_url):
     q = Queue(connection=Redis())
-    return q.enqueue(func, *args, Retry(max=3, interval=[10, 30, 60]))
+    return q.enqueue(func, api_id, question, response_url, retry=Retry(max=3))
 
 def get_uuid():
     return str(uuid.uuid4())
@@ -72,7 +72,7 @@ def ask_bot():
                       'error': 'Invalid request, question is empty'})
 
     print({'api_id': api_id, 'question': question, 'response_url': response_url, 'message': 'Processing your question, please wait...'})
-    enqueue(ask_bot_async, api_id, question, response_url)
+    enqueue_question(ask_bot_async, api_id, question, response_url)
     print({'api_id': api_id, 'message': f"started background job ask_bot_async"})
     
     return jsonify({
