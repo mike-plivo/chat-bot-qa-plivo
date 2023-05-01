@@ -101,9 +101,23 @@ print(result)
 - If the bot does not know the answer, it will respond with "I don't know" and will not attempt to make up an answer.
 
 
-# fly deploy
+# fly.io install
+
+## First deployment
+### Deploy the app and machine
 ```bash
 fly deploy --force-machines --local-only --region iad --vm-size shared-cpu-2x
-
-fly scale memory 2048
 ```
+### Build the vector database (faiss) or update the vector database
+```bash
+fly scale memory 4096 # scale up memory to ingest the data
+fly ssh console --pty python3 /app/ingest.py # build the vector database
+fly scale memory 2048 # scale down memory
+```
+
+
+## Update the app
+```bash
+fly deploy --local-only
+```
+
