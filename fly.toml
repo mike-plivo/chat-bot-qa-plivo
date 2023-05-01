@@ -18,6 +18,14 @@ primary_region = "iad"
     interval = "15s"
     timeout = "2s"
     grace_period = "5s"
+  [checks.api]
+    grace_period = "30s"
+    interval = "30s"
+    method = "get"
+    path = "/"
+    port = 50505
+    timeout = "20s"
+    type = "http"
 
 [build]
   dockerfile = "Dockerfile.fly"
@@ -26,12 +34,11 @@ primary_region = "iad"
 
 [env]
   OPENAI_MODEL="gpt-4"
-  VECTOR_DATABASE="data/codebot.faiss.amd64"
+  VECTOR_DATABASE="/data/codebot.faiss.amd64"
   ENV="prod"
   ARCH="amd64"
 
 [mounts]
  source="plivo_askme_data"
  destination="/data"
-  
 
