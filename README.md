@@ -100,3 +100,10 @@ print(result)
 ## Notes
 - If the bot does not know the answer, it will respond with "I don't know" and will not attempt to make up an answer.
 
+
+# fly deploy
+```bash
+fly deploy --force-machines --local-only --region iad --vm-size shared-cpu-2x
+
+fly scale memory 2048
+```
