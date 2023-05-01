@@ -1,12 +1,4 @@
 import sys
-import signal
-import os
-def signal_handler(sig, frame):
-    print('You pressed Ctrl+C!')
-    os.kill(os.getpid(), signal.SIGKILL)
-
-signal.signal(signal.SIGINT, signal_handler)
-
 import os
 from langchain.document_loaders.sitemap import SitemapLoader
 from code_loader import GithubCodeLoader
@@ -16,7 +8,7 @@ import settings
 
 def ingest_docs_from_github_repos():
     """Ingest all docs."""
-    repos = []
+    repos = set()
     ingested_docs = 0
     if not settings.CODEBOT_GIT_REPO_URLS:
         print("No repos specified in settings.CODEBOT_GIT_REPO_URLS")
@@ -25,10 +17,12 @@ def ingest_docs_from_github_repos():
     for repo in settings.CODEBOT_GIT_REPO_URLS:
         try:
             repo_url, branch = repo
-            repos.append((repo_url, branch))
+            repos.add((repo_url, branch))
         except:
             print(f"Invalid repo {repo}. Format should be (repo_url, branch)")
-            sys.exit(1)
+            continue
+
+    repos = list(repos)
     for repo_url, branch in repos:
         print(f"Loading {repo_url} with branch {branch}")
         loader = GithubCodeLoader(repo_url, branch=branch, debug=True)
