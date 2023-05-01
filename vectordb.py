@@ -15,20 +15,21 @@ class Ingestor(object):
         )
         self.docs = text_splitter.split_documents(docs)
 
-    def _ingest(self):
+    def _ingest(self, **kwargs):
         print(f"Ingesting {len(self.docs)} documents ...")
         if self.vector_url[:8] == "redis://":
-            return self._ingest_redis()
-        return self._ingest_faiss()
+            return self._ingest_redis(**kwargs)
+        return self._ingest_faiss(**kwargs)
 
-    def _ingest_redis(self):
+    def _ingest_redis(self, **kwargs):
         while len(self.docs) > 0:
             docs = self._pop()
             print(f"Saving {len(docs)} into Redis {self.vector_url}")
             r = Redis.from_documents(docs, self.embeddings, redis_url=self.vector_url, index_name='link')
         return True
 
-    def _ingest_faiss(self):
+    def _ingest_faiss(self, **kwargs):
+        overwrite = kwargs.get("overwrite", True)
         idx = 1
         print(f"Total documents to process: {len(self.docs)}")
         while len(self.docs) > 0:
@@ -53,17 +54,26 @@ class Ingestor(object):
             os.remove(vector_url)
             print(f"Merged {vector_url} into {orig_vector_url}")
 
-        print(f"Saving merged FAISS into {self.vector_url}")
-        try: os.remove(self.vector_url)
-        except: pass
         try: os.remove(orig_vector_url)
         except: pass
-        with open(self.vector_url, "wb") as f:
-            pickle.dump(db, f)
-        return True
+
+        if overwrite is True:
+            print(f"Saving data (overwrite) into {self.vector_url}")
+            with open(self.vector_url, "wb") as f:
+                pickle.dump(db, f)
+            print(f"Saved data (overwrite) into {self.vector_url}")
+            return True
+        else:
+            print(f"Merging data (append) into {self.vector_url}")
+            src_db = Loader.load(self.vector_url)
+            src_db.merge_from(db)
+            with open(self.vector_url, "wb") as f:
+                pickle.dump(src_db, f)
+            print(f"Merged data (append) into {self.vector_url}")
+            return True
     
-    def run(self):
-        return self._ingest()
+    def run(self, **kwargs):
+        return self._ingest(**kwargs)
 
     def _pop(self, size=500):
         docs = []
@@ -78,8 +88,8 @@ class Ingestor(object):
         return docs
 
     @classmethod
-    def ingest(cls, vector_url, docs):
-        return cls(vector_url, docs).run()
+    def ingest(cls, vector_url, docs, **kwargs):
+        return cls(vector_url, docs).run(**kwargs)
         
 
 
