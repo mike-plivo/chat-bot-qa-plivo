@@ -162,25 +162,19 @@ class BaseCodeLoader(BaseLoader):
 
 
 class GithubCodeLoader(BaseCodeLoader):
-    def __init__(self, repository_url: str, local_dir: None, branch: str = 'main', 
+    def __init__(self, repository_url: str, 
+                 local_dir: str = None, 
+                 branch: str = 'main', 
                  exclude_dirs: List[str] = None, 
                  exclude_files: List[str] = None, 
                  include_only_known_extensions: bool = False,
-                 debug=False, cleanup_cache_dir=True):
-        """Initialize with file path."""
-        super().__init__(local_dir, exclude_dirs, exclude_files, debug)
+                 debug=False, 
+                 cleanup_cache_dir=True):
 
         self.repo_url = repository_url
         self.branch = branch
         self.cleanup_cache_dir = cleanup_cache_dir
         self._gitignore = None
-        if not local_dir:
-            local_dir = os.getcwd() + "data/tmp"
-            print(f"Local directory not specified. Using {local_dir}")
-            if not os.path.exists(local_dir):
-                print(f"Creating local directory: {local_dir}")
-                os.makedirs(local_dir)
-        self.path = os.path.join(local_dir, self.repo_url.split("/")[-1])
 
         self._include_only_known_extensions = include_only_known_extensions
         if self._include_only_known_extensions:
@@ -201,6 +195,16 @@ class GithubCodeLoader(BaseCodeLoader):
         for file in ['.gitignore', '.gitattributes', '.gitmodules', '.gitkeep', '.github', '.DS_Store']:
             if not file in self.exclude_files:
                 self.exclude_files.append(file)
+
+        if not local_dir:
+            local_dir = os.getcwd() + "/data/tmp"
+            print(f"Local directory not specified. Using {local_dir}")
+            if not os.path.exists(local_dir):
+                print(f"Creating local directory: {local_dir}")
+                os.makedirs(local_dir)
+
+        path = os.path.join(local_dir, self.repo_url.split("/")[-1])
+        super().__init__(path, exclude_dirs, exclude_files, debug)
 
         self._documents = []
 
