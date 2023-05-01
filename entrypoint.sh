@@ -18,7 +18,7 @@ case "$ENV" in
 	"*" | "prod")
 		echo "Running in Prod Mode"
 		redis-server --daemonize yes
-		rqworker &
+		rqworker --verbose --max-jobs 2 &
 		gunicorn -c ./gunicorn.conf.py app:app
 	;;
 esac

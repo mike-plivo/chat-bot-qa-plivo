@@ -3,7 +3,7 @@ import json
 import uuid
 import traceback
 from redis import Redis
-from rq import Queue
+from rq import Queue, Retry
 import requests
 from flask import Flask, jsonify, request
 from faqbot import FAQBot
@@ -14,8 +14,7 @@ app.debug = True
 
 def enqueue(func, *args):
     q = Queue(connection=Redis())
-    return q.enqueue(func, *args)
-
+    return q.enqueue(func, *args, Retry(max=3, interval=[10, 30, 60]))
 
 def get_uuid():
     return str(uuid.uuid4())
