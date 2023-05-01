@@ -1,6 +1,7 @@
 """Load text files."""
 import os
 import subprocess
+import shutil
 from typing import List
 from pathlib import Path
 import logging
@@ -165,15 +166,20 @@ class GithubCodeLoader(BaseCodeLoader):
                  exclude_dirs: List[str] = None, 
                  exclude_files: List[str] = None, 
                  include_only_known_extensions: bool = False,
-                 debug=False):
+                 debug=False, cleanup_cache_dir=True):
         """Initialize with file path."""
         super().__init__(local_dir, exclude_dirs, exclude_files, debug)
 
         self.repo_url = repository_url
         self.branch = branch
+        self.cleanup_cache_dir = cleanup_cache_dir
         self._gitignore = None
         if not local_dir:
-            local_dir = os.getcwd()
+            local_dir = os.getcwd() + "data/tmp"
+            print(f"Local directory not specified. Using {local_dir}")
+            if not os.path.exists(local_dir):
+                print(f"Creating local directory: {local_dir}")
+                os.makedirs(local_dir)
         self.path = os.path.join(local_dir, self.repo_url.split("/")[-1])
 
         self._include_only_known_extensions = include_only_known_extensions
@@ -201,7 +207,14 @@ class GithubCodeLoader(BaseCodeLoader):
     def load(self) -> List[Document]:
         """Load from git repository."""
         self._clone_git_repo()
-        return super().load()
+        docs = super().load()
+        self._cleanup_cache()
+        return docs
+
+    def _cleanup_cache(self):
+        """Cleanup cache."""
+        if self.cleanup_cache_dir is True:
+            shutil.rmtree(self.path)
 
     def get_documents(self) -> List[Document]:
         """Get documents."""
@@ -248,7 +261,7 @@ class GithubCodeLoader(BaseCodeLoader):
             try:
                 os.chdir(self.path)
                 # use Popen to avoid blocking
-                cmd = f"git pull"
+                cmd = "git pull"
                 exitcode, output = subprocess.getstatusoutput(cmd)
                 if exitcode != 0:
                     raise Exception(f"Error cloning repo: exitcode {exitcode}: {output}")

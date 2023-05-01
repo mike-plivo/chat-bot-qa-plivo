@@ -3,6 +3,7 @@ data/*.faiss
 data/*.faiss.*
 data/*.rdb
 data/git_repos/*
+data/tmp/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

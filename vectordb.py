@@ -57,19 +57,19 @@ class Ingestor(object):
         try: os.remove(orig_vector_url)
         except: pass
 
-        if overwrite is True:
-            print(f"Saving data (overwrite) into {self.vector_url}")
+        if overwrite is True or not os.path.exists(self.vector_url):
+            print(f"New FAISS file created {self.vector_url}, saving...")
             with open(self.vector_url, "wb") as f:
                 pickle.dump(db, f)
-            print(f"Saved data (overwrite) into {self.vector_url}")
+            print(f"Saved data into {self.vector_url}")
             return True
         else:
-            print(f"Merging data (append) into {self.vector_url}")
+            print(f"Found existing FAISS file {self.vector_url}, merging...")
             src_db = Loader.load(self.vector_url)
             src_db.merge_from(db)
             with open(self.vector_url, "wb") as f:
                 pickle.dump(src_db, f)
-            print(f"Merged data (append) into {self.vector_url}")
+            print(f"Merged data into {self.vector_url}")
             return True
     
     def run(self, **kwargs):

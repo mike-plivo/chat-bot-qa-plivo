@@ -1,12 +1,18 @@
-import os
 import sys
-from langchain.document_loaders.sitemap import SitemapLoader
+import signal
+import os
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    os.kill(os.getpid(), signal.SIGKILL)
 
+signal.signal(signal.SIGINT, signal_handler)
+
+import os
+from langchain.document_loaders.sitemap import SitemapLoader
 from code_loader import GithubCodeLoader
 from sitemapchunk_loader import SitemapChunkLoader
 from vectordb import Ingestor
 import settings
-
 
 def ingest_docs_from_github_repos():
     """Ingest all docs."""
@@ -25,10 +31,10 @@ def ingest_docs_from_github_repos():
             sys.exit(1)
     for repo_url, branch in repos:
         print(f"Loading {repo_url} with branch {branch}")
-        loader = GithubCodeLoader(repo_url, local_dir=settings.CODEBOT_GIT_REPOS_DIR, branch=branch, debug=True)
+        loader = GithubCodeLoader(repo_url, branch=branch, debug=True)
         docs = loader.load()
         if docs:
-            print(f"Loaded {len(docs)} documents from {sitemap_url}")
+            print(f"Loaded {len(docs)} documents from {repo_url}")
             ingested_docs += len(docs)
             Ingestor.ingest(settings.VECTOR_DATABASE, docs, overwrite=False)
             continue
@@ -57,8 +63,13 @@ def ingest_docs_from_sitemaps():
 
 def ingest_all_docs():
     """Ingest all docs."""
-    k = os.getenv("OPENAI_API_KEY")
-    if not k:
+    ingested_docs = ingest_docs_from_github_repos() 
+    ingested_docs += ingest_docs_from_sitemaps()
+    print(f"Ingested total {ingested_docs} documents")
+
+
+if __name__ == "__main__":
+    if not settings.OPENAI_API_KEY:
         print("OPENAI_API_KEY not set")
         sys.exit(1)
     if not settings.VECTOR_DATABASE:
@@ -67,11 +78,5 @@ def ingest_all_docs():
     if os.path.exists(settings.VECTOR_DATABASE):
         print(f"Database {settings.VECTOR_DATABASE} already exists. Delete it first if you want to re-ingest")
         sys.exit(1)
-    ingested_docs = ingest_docs_from_sitemaps()
-    ingested_docs += ingest_docs_from_github_repos()
-    print(f"Ingested total {ingested_docs} documents")
-
-
-if __name__ == "__main__":
     ingest_all_docs()
 

@@ -4,11 +4,9 @@ import uuid
 import traceback
 from redis import Redis
 from rq import Queue
-
 import requests
 from flask import Flask, jsonify, request
 from faqbot import FAQBot
-
 import settings
 
 app = Flask(__name__)

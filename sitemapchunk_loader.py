@@ -4,8 +4,13 @@ from langchain.document_loaders.sitemap import SitemapLoader
 
 
 class SitemapChunkLoader(SitemapLoader):
-    def __init__(self):
-        super().__init__()
+    def __init__(
+        self,
+        web_path: str,
+        filter_urls: Optional[List[str]] = None,
+        parsing_function: Optional[Callable] = None,
+    ):
+        super().__init__(web_path, filter_urls, parsing_function)
         self._els = None
 
     def load_chunks(self, chunk_size=200) -> List[Document]:
@@ -30,17 +35,17 @@ class SitemapChunkLoader(SitemapLoader):
             if "loc" not in el:
                 print(f"Skipping {el} because it has no loc")
                 continue
-            loc = el["loc"].strip()
-            print(f"Loading {loc}")
-            data = self.scrape(loc)
-            results.append((loc, data, el))
+            url = el["loc"].strip()
+            print(f"Loading {url}")
+            data = self._scrape(url)
+            results.append((url, data, el))
 
         print(f"Loaded {len(results)} documents from sitemap")
         return [
             Document(
                 page_content=self.parsing_function(data),
-                metadata={**{"source": loc}, **el},
+                metadata={**{"source": url}, **el},
             )
-            for loc, data, metadata in results
+            for url, data, metadata in results
         ]
 

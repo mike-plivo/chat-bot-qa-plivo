@@ -23,5 +23,5 @@ RUN chmod 755 ./entrypoint.sh
 
 EXPOSE 50505
 
-ENTRYPOINT ["sh", "-c", "./entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "./entrypoint.sh"]
 
