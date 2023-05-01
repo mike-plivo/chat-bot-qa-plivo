@@ -14,17 +14,12 @@ primary_region = "iad"
 
 [checks]
   [checks.alive]
-    type = "tcp"
-    interval = "15s"
-    timeout = "2s"
-    grace_period = "5s"
-  [checks.api]
-    grace_period = "30s"
-    interval = "30s"
+    grace_period = "10s"
+    interval = "10s"
     method = "get"
-    path = "/"
+    path = "/status"
     port = 50505
-    timeout = "20s"
+    timeout = "5s"
     type = "http"
 
 [build]

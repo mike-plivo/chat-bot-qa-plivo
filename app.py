@@ -41,6 +41,10 @@ def index():
     return success({'api_id': api_id,
                     'message': 'Welcome to Plivo FAQBot API'})
 
+@app.route('/status', methods=['GET'])
+def status():
+    return "OK", 200
+
 @app.route('/ask', methods=['POST'])
 def ask_bot():
     api_id = get_uuid()
