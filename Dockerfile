@@ -14,12 +14,12 @@ RUN rm -rf /var/lib/apt/lists/* || true
 
 WORKDIR /app
 # Install dependencies
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir  -r requirements.txt
+RUN mkdir data || true
 COPY entrypoint.sh .
 COPY local_test.sh .
-COPY requirements.txt .
 COPY *.py .
-RUN mkdir data || true
-RUN pip3 install --no-cache-dir  -r requirements.txt
 RUN chmod 755 ./entrypoint.sh
 
 EXPOSE 50505
