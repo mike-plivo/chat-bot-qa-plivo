@@ -1,5 +1,7 @@
-CODEBOT_GIT_REPOS_DIR="data/git_repos"
-CODEBOT_GIT_REPO_URLS = [
+#INGEST_GIT_REPOS_DIR="data/git_repos"
+INGEST_GIT_REPOS_DIR=None
+
+INGEST_GIT_REPO_URLS = [
         # format is (repo_url, branch)
         ('https://github.com/plivo/plivo-python.git', 'master'),
         ('https://github.com/plivo/plivo-java.git', 'master'),
@@ -16,7 +18,7 @@ CODEBOT_GIT_REPO_URLS = [
         ('https://github.com/plivo/plivo-examples-node.git', 'master'),
 ] 
 
-CODEBOT_SITEMAP_URLS = [
+INGEST_SITEMAP_URLS = [
         "https://www.plivo.com/sitemap.xml",
 ]
 
@@ -38,7 +40,8 @@ FAQBOT_SYSTEM_TEMPLATE='''
 - Always include the complete response in the answer.
 - If you don't know the answer, just say that "I don't know", don't try to make up an answer.
 - 'Webhook' keyword is synonymous to 'callback', 'API' is synonymous to 'Plivo API', 'SDK' is synonymous to 'Plivo SDK', 'XML' is synonymous to 'Plivo XML'.
-- Format the answer with markdown.
+- For any coding implementation, act as software development engineer and use the Plivo SDK to solve the problem, if the programming language is not specified, use the Plivo Python SDK.
+- Format the answer with markdown but bit for the links and urls.
 - Analyze the following information to answer the question.
 ----------------
 {summaries}
@@ -78,9 +81,15 @@ if ARCH not in ['amd64', 'arm64']:
 
 VECTOR_DATABASE = VECTOR_DATABASE.replace('{ARCH}', ARCH)
 
+OPENAI_REQUEST_TIMEOUT = os.getenv('OPENAI_REQUEST_TIMEOUT')
+if not OPENAI_REQUEST_TIMEOUT:
+    OPENAI_REQUEST_TIMEOUT = 120
+
+CODEBOT_OPENAI_REQUEST_TIMEOUT = OPENAI_REQUEST_TIMEOUT
 CODEBOT_OPENAI_MODEL = OPENAI_MODEL
-FAQBOT_OPENAI_MODEL = OPENAI_MODEL
 CODEBOT_OPENAI_TEMPERATURE=0.0
 CODEBOT_OPENAI_MAX_TOKENS=2000
+FAQBOT_OPENAI_REQUEST_TIMEOUT = OPENAI_REQUEST_TIMEOUT
+FAQBOT_OPENAI_MODEL = OPENAI_MODEL
 FAQBOT_OPENAI_TEMPERATURE=0.0
 FAQBOT_OPENAI_MAX_TOKENS=2000

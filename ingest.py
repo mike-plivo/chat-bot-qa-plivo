@@ -10,11 +10,11 @@ def ingest_docs_from_github_repos():
     """Ingest all docs."""
     repos = set()
     ingested_docs = 0
-    if not settings.CODEBOT_GIT_REPO_URLS:
+    if not settings.INGEST_GIT_REPO_URLS:
         print("No repos specified in settings.CODEBOT_GIT_REPO_URLS")
         return ingested_docs
 
-    for repo in settings.CODEBOT_GIT_REPO_URLS:
+    for repo in settings.INGEST_GIT_REPO_URLS:
         try:
             repo_url, branch = repo
             repos.add((repo_url, branch))
@@ -37,11 +37,11 @@ def ingest_docs_from_github_repos():
 
 def ingest_docs_from_sitemaps():
     ingested_docs = 0
-    if not settings.CODEBOT_SITEMAP_URLS:
+    if not settings.INGEST_SITEMAP_URLS:
         print("No sitemap urls specified in settings.CODEBOT_SITEMAP_URLS")
         return ingested_docs
 
-    for sitemap_url in settings.CODEBOT_SITEMAP_URLS:
+    for sitemap_url in settings.INGEST_SITEMAP_URLS:
         print(f"Loading {sitemap_url}")
         loader = SitemapChunkLoader(web_path=sitemap_url)
         while True:

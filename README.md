@@ -15,10 +15,11 @@ You can ingest Github repositories and websites (via sitemap) into The FAISS vec
 pip3 install -r requirements.txt
 ```
 
-## Configure environment variable OPENAI_API_KEY
+## Configure environment variable OPENAI_API_KEY and OPENAI_MODEL
 
 ```bash
 export OPENAI_API_KEY=sk-xxxx
+export OPENAI_MODEL=gpt-4
 ```
 
 ## Build the FAISS vector database

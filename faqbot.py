@@ -59,7 +59,8 @@ class BaseFAQBot(object):
             chain_type_kwargs = {"prompt": chat_prompt}
             llm = ChatOpenAI(model_name=settings.FAQBOT_OPENAI_MODEL, 
                              temperature=settings.FAQBOT_OPENAI_TEMPERATURE, 
-                             max_tokens=settings.FAQBOT_OPENAI_MAX_TOKENS)
+                             max_tokens=settings.FAQBOT_OPENAI_MAX_TOKENS,
+                             request_timeout=settings.FAQBOT_OPENAI_REQUEST_TIMEOUT)
             self._chain = RetrievalQAWithSourcesChain.from_chain_type(
                 llm=llm,
                 chain_type="stuff",
