@@ -122,3 +122,16 @@ fly scale memory 2048 # scale down memory
 fly deploy --local-only
 ```
 
+# Local test
+## Run the server in one terminal
+```bash
+SLACK_TOKEN_ID=xxxx OPENAI_API_KEY=xxxx bash run.sh prod
+```
+
+## Run the test in a second terminal
+```bash
+docker exec -ti <CONTAINER_ID> bash local_test.sh
+```
+
+
+
