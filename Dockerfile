@@ -15,6 +15,7 @@ RUN rm -rf /var/lib/apt/lists/* || true
 WORKDIR /app
 # Install dependencies
 COPY entrypoint.sh .
+COPY local_test.sh .
 COPY requirements.txt .
 COPY *.py .
 RUN mkdir data || true

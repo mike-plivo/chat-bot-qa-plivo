@@ -15,7 +15,8 @@ app.debug = True
 
 def enqueue_question(func, api_id, question, response_url):
     q = Queue(connection=Redis())
-    return q.enqueue(func, api_id, question, response_url, retry=Retry(max=3))
+    return q.enqueue(func, api_id, question, response_url, 
+                     retry=Retry(max=3))
 
 
 class Logger(object):
@@ -83,23 +84,39 @@ def index():
 def status():
     return APIResponse().success("OK")
 
+@app.route('/dump', methods=['POST'])
+def dump():
+    api = APIResponse()
+    api.get_log().info('############ Dumping request ############')
+    api.get_log().info('Request headers', data=str(request.headers))
+    api.get_log().info('Request values', data=str(request.values))
+    api.get_log().info('Request data', data=str(request.data))
+    api.get_log().info('############ End of dump ############')
+    return api.success('OK')
+
+
 @app.route('/ask', methods=['POST'])
 def ask_bot():
     api = APIResponse()
     question = ''
 
+    # paramaters sent by slack: 
+    # ImmutableMultiDict([('token', 'xxxx'), ('team_id', 'xxxx'), ('team_domain', 'xxxx'), ('channel_id', 'xxxx'), ('channel_name', 'directmessage'), ('user_id', 'xxxx'), ('user_name', 'xxxx'), ('command', '/askplivo'), ('text', 'How can I send an MMS?'), ('api_app_id', 'xxxx'), ('is_enterprise_install', 'false'), ('enterprise_id', 'xxxxx'), ('enterprise_name', 'xxxxx'), ('response_url', 'https://hooks.slack.com/commands/xxxxx/yyyyy'), ('trigger_id', '12345650.2185784041.89264838048e2b69570fb84f2187a4ea')]
+
     if request.method != 'POST':
         return api.error('Invalid request method')
 
     try:
-        api.get_log().info('Received request')
         try:
             token_id = request.form['token']
+            user_name = request.form.get('user_name', None)
+            team_domain = request.form.get('team_domain', None)
         except KeyError:
             return api.denied()
+
         if token_id != settings.SLACK_TOKEN_ID:
             return api.denied()
-            
+
         cmd = request.form['command']
         if cmd != '/askplivo':
             return api.error('Invalid command')
@@ -107,6 +124,11 @@ def ask_bot():
         response_url = request.form['response_url']
     except KeyError:
         return api.error('Invalid request, no question provided')
+
+    api.log.info('Received request',
+             user_name=user_name, team_domain=team_domain,
+             question=question, response_url=response_url)
+
 
     question = question.strip()
     if not question:

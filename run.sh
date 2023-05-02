@@ -42,6 +42,7 @@ if [ "$MYENV" = "prod" ] || [ "$MYENV" = "dev" ]; then
 fi
 
 docker run --platform "linux/${ARCH}" \
+	--rm \
 	-ti \
 	-e SLACK_TOKEN_ID="$SLACK_TOKEN_ID" \
 	-e OPENAI_API_KEY="$OPENAI_API_KEY" \

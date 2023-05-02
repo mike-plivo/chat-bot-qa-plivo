@@ -23,7 +23,7 @@ primary_region = "iad"
     type = "http"
 
 [build]
-  dockerfile = "Dockerfile.fly"
+  dockerfile = "Dockerfile"
   [build.args]
     ARCH="amd64"
 
