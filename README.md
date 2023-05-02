@@ -112,7 +112,7 @@ fly deploy --force-machines --local-only --region iad --vm-size shared-cpu-2x
 ### Build the vector database (faiss) or update the vector database
 ```bash
 fly scale memory 4096 # scale up memory to ingest the data
-fly ssh console --pty -C python3 /app/ingest.py # build the vector database
+fly ssh console --pty -C 'python3 /app/ingest.py' # build the vector database
 fly scale memory 2048 # scale down memory
 ```
 
