@@ -192,7 +192,7 @@ class GithubCodeLoader(BaseCodeLoader):
         if exclude_files is None:
             exclude_files = []
         self.exclude_files = list(set(exclude_files))
-        for file in ['.gitignore', '.gitattributes', '.gitmodules', '.gitkeep', '.github', '.DS_Store']:
+        for file in ['.gitignore', '.gitattributes', '.gitmodules', '.gitkeep', '.github', '.DS_Store', '.git']:
             if not file in self.exclude_files:
                 self.exclude_files.append(file)
 
