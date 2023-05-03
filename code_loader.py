@@ -1,5 +1,6 @@
 """Load text files."""
 import os
+import os.path
 import subprocess
 import shutil
 from typing import List
@@ -58,6 +59,7 @@ class BaseCodeLoader(BaseLoader):
         'yml': 'yaml',
         'yaml': 'yaml',
         'md': 'markdown',
+        'markdown': 'markdown',
         'txt': 'text',
         'csv': 'csv',
         'text': 'text',
@@ -105,10 +107,12 @@ class BaseCodeLoader(BaseLoader):
         return False
 
     def _load_directory(self, directory_path: Path) -> List[Document]:
+        if self._is_excluded(directory_path):
+            return
         for file_path in directory_path.iterdir():
-            self._debug(f"Scanning: {file_path.as_posix()}")
             if self._is_excluded(file_path):
                 continue
+            self._debug(f"Scanning: {file_path.as_posix()}")
             if file_path.is_dir():
                 self._load_directory(file_path)
             else:
@@ -116,6 +120,8 @@ class BaseCodeLoader(BaseLoader):
         return self._documents
 
     def _load_file(self, file_path: Path, extra_metadata: dict = None) -> List[Document]:
+        if self._is_excluded(file_path):
+            return
         self._debug(f"Loading {file_path.as_posix()}")
         # do not index binary files
         if is_binary(file_path.as_posix()):
@@ -162,6 +168,21 @@ class BaseCodeLoader(BaseLoader):
 
 
 class GithubCodeLoader(BaseCodeLoader):
+
+    DEFAULT_EXCLUDED = ['.gitignore', '.gitattributes', '.gitmodules', '.gitkeep', '.github', 
+                        '.DS_Store', '.git', '.circleci', '.vscode', '.idea',
+                        'CONTRIBUTING.md', 'CONTRIBUTING.rst', 'CONTRIBUTING.markdown',
+                        'JenkinsFile', 'Jenkinsfile', 'Makefile', 'Rakefile', 'Gulpfile.js',
+                        'setup.py', 'requirements.txt', 'requirements-dev.txt', 'requirements-test.txt',
+                        '__pycache__', '.pytest_cache', '.tox', '.coverage', '.coveragerc',
+                        'configure.ac', 'configure.in', 'configure', 'CMakeLists.txt', 'CMakeCache.txt',
+                        'Gruntfile.js', 'gulpfile.js', 'gruntfile.js', 'package-lock.json',
+                        'package.json', 'package-lock.json', 'yarn.lock', 'Gemfile', 'Gemfile.lock', 'composer.json', 'composer.lock',
+                        'Pipfile', 'Pipfile.lock', 'pyproject.toml', 'poetry.lock',
+                        'Makefile.am', 'Makefile.in', 'Makefile', 'GNUmakefile', 'GNUmakefile.in',
+                        'Dockerfile', 'docker-compose.yml', 'docker-compose.yaml', 'docker-compose.dev.yml',
+                        '.env', '.venv', 'env', 'venv', 'ENV', 'env.bak', 'venv.bak']
+
     def __init__(self, repository_url: str, 
                  local_dir: str = None, 
                  branch: str = 'main', 
@@ -184,20 +205,17 @@ class GithubCodeLoader(BaseCodeLoader):
 
         if exclude_dirs is None:
             exclude_dirs = []
-        self.exclude_dirs = list(set(exclude_dirs))
-        for directory in ['.git']:
-            if not directory in self.exclude_dirs:
-                self.exclude_dirs.append(directory)
+        exclude_dirs.extend(self.DEFAULT_EXCLUDED)
+        exclude_dirs = list(set(exclude_dirs))
 
         if exclude_files is None:
             exclude_files = []
-        self.exclude_files = list(set(exclude_files))
-        for file in ['.gitignore', '.gitattributes', '.gitmodules', '.gitkeep', '.github', '.DS_Store', '.git']:
-            if not file in self.exclude_files:
-                self.exclude_files.append(file)
+        exclude_files.extend(self.DEFAULT_EXCLUDED)
+
+        exclude_files = list(set(exclude_files))
 
         if not local_dir:
-            local_dir = os.getcwd() + "/data/tmp"
+            local_dir = os.path.join(os.getcwd(), "/data/tmp")
             print(f"Local directory not specified. Using {local_dir}")
             if not os.path.exists(local_dir):
                 print(f"Creating local directory: {local_dir}")
