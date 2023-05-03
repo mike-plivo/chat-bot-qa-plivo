@@ -32,6 +32,7 @@ primary_region = "iad"
   VECTOR_DATABASE="/data/codebot.faiss.amd64"
   ENV="prod"
   ARCH="amd64"
+  OPENAI_REQUEST_TIMEOUT="180"
 
 [mounts]
  source="plivo_askme_data"

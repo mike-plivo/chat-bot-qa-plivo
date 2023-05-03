@@ -16,7 +16,8 @@ app.debug = True
 def enqueue_question(func, api_id, question, response_url):
     q = Queue(connection=Redis())
     return q.enqueue(func, api_id, question, response_url, 
-                     retry=Retry(max=3))
+                     retry=Retry(max=3), 
+                     job_timeout=settings.OPENAI_REQUEST_TIMEOUT*2)
 
 
 class Logger(object):
