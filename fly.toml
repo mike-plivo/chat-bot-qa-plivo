@@ -6,21 +6,51 @@
 app = "plivo-ask-me"
 primary_region = "iad"
 
-[http_service]
+[processes]
+slackbot = "bash -c ./start_slackbot.sh"
+qdrant = "bash -c ./start_qdrant.sh"
+
+
+[[services]]
+  processes = ["slackbot"]
   internal_port = 50505
-  force_https = true
+  protocol = "http"
   auto_stop_machines = false
   auto_start_machines = true
 
-[checks]
-  [checks.alive]
-    grace_period = "10s"
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true 
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+  
+  [[services.http_checks]]
     interval = "10s"
+    grace_period = "5s"
     method = "get"
     path = "/status"
-    port = 50505
-    timeout = "5s"
-    type = "http"
+    protocol = "http"
+    restart_limit = 2
+    timeout = "2s"
+    tls_skip_verify = false
+    [services.http_checks.headers]
+
+[[services]]
+  processes = ["qdrant"]
+  internal_port = 6334
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+
+  [[services.tcp_checks]]
+    interval = "10s"
+    grace_period = "5s"
+    restart_limit = 2
+    timeout = "2s"
+
 
 [build]
   dockerfile = "Dockerfile"
@@ -29,12 +59,13 @@ primary_region = "iad"
 
 [env]
   OPENAI_MODEL="gpt-4"
-  VECTOR_DATABASE="/data/codebot.faiss.amd64"
+  VECTOR_DATABASE="http://qdrant:6334"
   ENV="prod"
   ARCH="amd64"
   OPENAI_REQUEST_TIMEOUT="180"
 
-[mounts]
+[[mounts]]
  source="plivo_askme_data"
  destination="/data"
+ processes=["qdrant"]
 

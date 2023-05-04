@@ -12,14 +12,10 @@ if [ ! -d $QDRANT_DATA ]; then
   mkdir -p $QDRANT_DATA
 fi
 
-QDRANT_EXEC=$(which qdrant)
-if [ $? -ne 0 ]; then
-  echo "qdrant not found"
-  exit 1
-fi
+QDRANT_EXEC=/qdrant/qdrant
 if [ -z "$QDRANT_EXEC" ]; then
   echo "qdrant not found"
   exit 1
 fi
 
-exec $QDRANT_EXEC --data_dir $QDRANT_DATA --grpc_port 6333 --http_port 6334 --log_level info
+exec $QDRANT_EXEC --config-path /app/qdrant.config.yml
