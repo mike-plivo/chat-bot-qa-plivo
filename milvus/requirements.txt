@@ -1,0 +1,2 @@
+milvus==2.2.6
+pymilvus==2.2.8
