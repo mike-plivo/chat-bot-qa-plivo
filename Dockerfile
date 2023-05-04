@@ -25,7 +25,6 @@ COPY qdrant.config.yml .
 COPY *.py .
 RUN chmod 755 ./entrypoint.sh ./start_slackbot.sh ./start_qdrant.sh ./local_test.sh
 
-EXPOSE 50505
 CMD ["bash", "-c", "./start_slackbot.sh"]
 #ENTRYPOINT ["/bin/bash", "-c", "./entrypoint.sh"]
 

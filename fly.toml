@@ -1,71 +1,67 @@
-# fly.toml app configuration file generated for plivo-ask-me on 2023-04-27T22:40:32-04:00
+# fly.toml app configuration file generated for plivo-ask-me2 on 2023-05-04T16:21:41-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "plivo-ask-me"
+app = "plivo-ask-me2"
 primary_region = "iad"
-
-[processes]
-slackbot = "bash -c ./start_slackbot.sh"
-qdrant = "bash -c ./start_qdrant.sh"
-
-
-[[services]]
-  processes = ["slackbot"]
-  internal_port = 50505
-  protocol = "http"
-  auto_stop_machines = false
-  auto_start_machines = true
-
-  [[services.ports]]
-    handlers = ["http"]
-    port = 80
-    force_https = true 
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
-  
-  [[services.http_checks]]
-    interval = "10s"
-    grace_period = "5s"
-    method = "get"
-    path = "/status"
-    protocol = "http"
-    restart_limit = 2
-    timeout = "2s"
-    tls_skip_verify = false
-    [services.http_checks.headers]
-
-[[services]]
-  processes = ["qdrant"]
-  internal_port = 6334
-  protocol = "tcp"
-  auto_stop_machines = false
-  auto_start_machines = true
-
-  [[services.tcp_checks]]
-    interval = "10s"
-    grace_period = "5s"
-    restart_limit = 2
-    timeout = "2s"
-
 
 [build]
   dockerfile = "Dockerfile"
   [build.args]
-    ARCH="amd64"
+    ARCH = "amd64"
 
 [env]
-  OPENAI_MODEL="gpt-4"
-  VECTOR_DATABASE="http://qdrant:6334"
-  ENV="prod"
-  ARCH="amd64"
-  OPENAI_REQUEST_TIMEOUT="180"
+  ARCH = "amd64"
+  ENV = "prod"
+  OPENAI_MODEL = "gpt-4"
+  OPENAI_REQUEST_TIMEOUT = "180"
+  VECTOR_DATABASE = "http://qdrant:6334"
+
+[processes]
+  qdrant = "bash -c ./start_qdrant.sh"
+  slackbot = "bash -c ./start_slackbot.sh"
 
 [[mounts]]
- source="plivo_askme_data"
- destination="/data"
- processes=["qdrant"]
+  source = "plivo_askme2_data"
+  destination = "/data"
+  processes = ["qdrant"]
 
+[[services]]
+  protocol = "tcp"
+  internal_port = 50505
+  auto_start_machines = true
+  auto_stop_machines = false
+  processes = ["slackbot"]
+
+  #[[services.ports]]
+  #  port = 80
+  #  handlers = ["http"]
+  #  force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+    #handlers = ["https"]
+
+  [[services.bot_checks]]
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "5s"
+    restart_limit = 2
+    method = "get"
+    path = "/status"
+    protocol = "http"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 6334
+  auto_start_machines = true
+  auto_stop_machines = false
+  processes = ["qdrant"]
+
+  [[services.tcp_checks]]
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "5s"
+    restart_limit = 2
