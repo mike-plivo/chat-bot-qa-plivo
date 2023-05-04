@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+qdrant/qdrant
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -17,12 +17,14 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir  -r requirements.txt
 RUN mkdir data || true
-COPY entrypoint.sh .
+COPY start_slackbot.sh .
+COPY start_qdrant.sh .
 COPY local_test.sh .
 COPY *.py .
-RUN chmod 755 ./entrypoint.sh
+RUN chmod 755 ./entrypoint.sh ./start_slackbot.sh ./start_qdrant.sh ./local_test.sh
 
-EXPOSE 50505
+EXPOSE 6333
 
-ENTRYPOINT ["/bin/bash", "-c", "./entrypoint.sh"]
+CMD ["bash", "-c", "./start_slackbot.sh"]
+#ENTRYPOINT ["/bin/bash", "-c", "./entrypoint.sh"]
 

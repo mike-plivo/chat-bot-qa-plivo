@@ -23,10 +23,6 @@ case $2 in
 esac
 
 
-if [ -z "$SLACK_TOKEN_ID" ]; then
-	echo "SLACK_TOKEN_ID is not set"
-	exit 1
-fi
 if [ -z "$OPENAI_API_KEY" ]; then
 	echo "OPENAI_API_KEY is not set"
 	exit 1
@@ -39,6 +35,16 @@ if [ -z "$VECTOR_DATABASE" ]; then
 fi
 if [ "$MYENV" = "prod" ] || [ "$MYENV" = "dev" ]; then
 	extra_args="-p 50505:50505"
+fi
+if [ "$MYENV" = "prod" ]; then
+	if [ -z "$SLACK_TOKEN_ID" ]; then
+		echo "SLACK_TOKEN_ID is not set"
+		exit 1
+	fi
+fi
+
+if [ ! -d "${PWD}/data" ]; then
+	mkdir -p ${PWD}/data
 fi
 
 docker run --platform "linux/${ARCH}" \

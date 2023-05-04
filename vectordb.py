@@ -1,7 +1,9 @@
 import os
 import pickle
+from qdrant_client import QdrantClient
 from langchain.vectorstores.faiss import FAISS
 from langchain.vectorstores.redis import Redis
+from langchain.vectorstores.qdrant import Qdrant
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -16,16 +18,48 @@ class Ingestor(object):
         self.docs = text_splitter.split_documents(docs)
 
     def _ingest(self, **kwargs):
-        print(f"Ingesting {len(self.docs)} documents ...")
         if self.vector_url[:8] == "redis://":
+            print(f"Ingesting {len(self.docs)} documents into Redis: {self.vector_url}")
             return self._ingest_redis(**kwargs)
+        elif self.vector_url[:9] == "qdrant://":
+            print(f"Ingesting {len(self.docs)} documents into Qdrant: {self.vector_url}")
+            return self._ingest_qdrant(**kwargs)
+        print(f"Ingesting {len(self.docs)} documents into FAISS: {self.vector_url}")
         return self._ingest_faiss(**kwargs)
 
-    def _ingest_redis(self, **kwargs):
+    def _ingest_qdrant(self, **kwargs):
+        data_path = self.vector_url[9:]
+        remote = False
+        if data_path.startswith("http://") or data_path.startswith("https://"):
+            remote = True
+        print(f"Total documents to process: {len(self.docs)}")
         while len(self.docs) > 0:
+            print(f"Total documents left to process: {len(self.docs)}")
             docs = self._pop()
-            print(f"Saving {len(docs)} into Redis {self.vector_url}")
-            r = Redis.from_documents(docs, self.embeddings, redis_url=self.vector_url, index_name='link')
+            print(f"Processing {len(docs)} documents...")
+            if remote is False:
+                q = Qdrant.from_documents(
+                    docs, self.embeddings,
+                    path=data_path,
+                    collection_name="plivoaskme",
+                )
+            else:
+                q = Qdrant.from_documents(
+                    docs, self.embeddings,
+                    url=data_path, prefer_grpc=True,
+                    collection_name="plivoaskme",
+                )
+            print(f"Processed {len(docs)} documents")
+        return True
+
+    def _ingest_redis(self, **kwargs):
+        print(f"Total documents to process: {len(self.docs)}")
+        while len(self.docs) > 0:
+            print(f"Total documents left to process: {len(self.docs)}")
+            docs = self._pop()
+            print(f"Processing {len(docs)} documents...")
+            r = Redis.from_documents(docs, self.embeddings, redis_url=self.vector_url, index_name='plivoaskme')
+            print(f"Processed {len(docs)} documents")
         return True
 
     def _ingest_faiss(self, **kwargs):
@@ -101,12 +135,34 @@ class Loader(object):
         #print("Loading documents...")
         if self.vector_url[:8] == "redis://":
             return self._load_redis()
+        elif self.vector_url[:9] == "qdrant://":
+            return self._load_qdrant()
         return self._load_faiss()
+
+    def _load_qdrant(self):
+        data_path = self.vector_url[9:]
+        remote = False
+        if data_path.startswith("http://") or data_path.startswith("https://"):
+            remote = True
+        embeddings = OpenAIEmbeddings()
+        if remote is False:
+            client = QdrantClient(
+                path=data_path, prefer_grpc=True
+            )
+        else:
+            client = QdrantClient(
+                url=data_path, prefer_grpc=True
+            )
+        q = Qdrant(
+            client=client, collection_name="plivoaskme", 
+            embedding_function=embeddings.embed_query
+        )
+        return q
 
     def _load_redis(self):
         #print(f"Loading from Redis {self.vector_url}")
         embeddings = OpenAIEmbeddings()
-        r = Redis.from_existing_index(embeddings, redis_url=self.vector_url, index_name='link')
+        r = Redis.from_existing_index(embeddings, redis_url=self.vector_url, index_name='plivoaskme')
         return r
 
     def _load_faiss(self):
