@@ -6,19 +6,6 @@ function ctrl_c() {
 	exit 0
 }
 
-case "$ENV" in
-	"dev")
-		echo "Running in Dev Mode"
-		bash
-	;;
-	"ingest")
-		echo "Running Ingestion Script"
-		python3 ./ingest.py
-	;;
-	"*" | "prod")
-		echo "Running in Prod Mode"
-		redis-server --daemonize yes
-		rqworker --verbose &
-		gunicorn -c ./gunicorn.conf.py app:app
-	;;
-esac
+redis-server --daemonize yes
+rqworker --verbose &
+gunicorn -c ./gunicorn.conf.py app:app

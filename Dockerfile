@@ -6,6 +6,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	git \
 	curl \
+	procps \
 	ca-certificates \
 	redis-server \
 	python3 \
@@ -19,12 +20,11 @@ RUN pip3 install --no-cache-dir  -r requirements.txt
 RUN mkdir data || true
 COPY start_slackbot.sh .
 COPY start_qdrant.sh .
+COPY start_ingest.sh .
 COPY local_test.sh .
-COPY entrypoint.sh .
 COPY qdrant.config.yml .
 COPY *.py .
-RUN chmod 755 ./entrypoint.sh ./start_slackbot.sh ./start_qdrant.sh ./local_test.sh
+RUN chmod 755 ./start_slackbot.sh ./start_qdrant.sh ./start_ingest.sh ./local_test.sh
 
 CMD ["bash", "-c", "./start_slackbot.sh"]
-#ENTRYPOINT ["/bin/bash", "-c", "./entrypoint.sh"]
 

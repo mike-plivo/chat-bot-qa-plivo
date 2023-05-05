@@ -18,4 +18,4 @@ if [ -z "$QDRANT_EXEC" ]; then
   exit 1
 fi
 
-exec $QDRANT_EXEC --config-path /app/qdrant.config.yml
+exec $QDRANT_EXEC --config-path /app/qdrant.config.yml --disable-telemetry

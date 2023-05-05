@@ -7,7 +7,7 @@ from redis import Redis
 from rq import Queue, Retry
 import requests
 from flask import Flask, jsonify, request
-from faqbot import FAQBot
+#from faqbot import FAQBot
 import settings
 
 app = Flask(__name__)

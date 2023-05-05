@@ -16,11 +16,12 @@ primary_region = "iad"
   ENV = "prod"
   OPENAI_MODEL = "gpt-4"
   OPENAI_REQUEST_TIMEOUT = "180"
-  VECTOR_DATABASE = "http://qdrant:6334"
+  VECTOR_DATABASE = "qdrant://http://e2865649c30758.vm.plivo-ask-me2.internal:6333"
 
 [processes]
-  qdrant = "bash -c ./start_qdrant.sh"
-  slackbot = "bash -c ./start_slackbot.sh"
+  slackbot = "/bin/bash -c ./start_slackbot.sh"
+  qdrant = "/bin/bash -c ./start_qdrant.sh"
+  ingest = "/bin/bash -c './start_ingest.sh flymode'"
 
 [[mounts]]
   source = "plivo_askme2_data"
@@ -34,17 +35,11 @@ primary_region = "iad"
   auto_stop_machines = false
   processes = ["slackbot"]
 
-  #[[services.ports]]
-  #  port = 80
-  #  handlers = ["http"]
-  #  force_https = true
-
   [[services.ports]]
     port = 443
     handlers = ["tls", "http"]
-    #handlers = ["https"]
 
-  [[services.bot_checks]]
+  [[services.alive_checks]]
     interval = "10s"
     timeout = "2s"
     grace_period = "5s"
@@ -55,13 +50,22 @@ primary_region = "iad"
 
 [[services]]
   protocol = "tcp"
-  internal_port = 6334
+  internal_port = 6333
   auto_start_machines = true
   auto_stop_machines = false
   processes = ["qdrant"]
 
-  [[services.tcp_checks]]
+  [[services.alive_checks]]
     interval = "10s"
     timeout = "2s"
     grace_period = "5s"
     restart_limit = 2
+    method = "get"
+    path = "/"
+    protocol = "http"
+
+#[[services]]
+#  auto_start_machines = false
+#  auto_stop_machines = false
+#  processes = ["ingest"]
+

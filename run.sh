@@ -1,47 +1,46 @@
 #!/bin/bash
 MYENV="prod"
+ARCH="amd64"
 case $1 in
-	"prod"|"dev"|"ingest")
+	prod|dev|ingest|qdrant)
 		MYENV="$1"
 	;;
 	"*")
-		echo "Usage: $0 (prod|dev) [amd64|arm64]"
-		echo "	Default is: prod amd64"
+		echo "Usage: $0 (prod|dev|ingest|qdrant)"
+		echo "	Default is: prod"
 		exit 1
 	;;
 esac
 
-ARCH="amd64"
-case $2 in
-	"arm64"|"amd64")
-		ARCH=$2
+case "$MYENV" in
+	"prod")
+		[ -z "$OPENAI_API_KEY" ] && echo " * Error: OPENAI_API_KEY is not set" && exit 1
+		[ -z "$SLACK_TOKEN_ID" ] && echo " * Error: SLACK_TOKEN_ID is not set" && exit 1
+		[ -z "$VECTOR_DATABASE" ] && echo " * Error: VECTOR_DATABASE is not set" && exit 1
+		[ -z "$OPENAI_MODEL" ] && OPENAI_MODEL="gpt-3.5-turbo" && echo " * Warning: OPENAI_MODEL is not set, using default: $OPENAI_MODEL"
+		extra_args="-p 50505:50505"
+		CMD="/bin/bash -c ./start_slackbot.sh"
 	;;
-	"*")
-		echo "Invalid architecture $2"
-		exit 1
+	"dev")
+		[ -z "$OPENAI_API_KEY" ] && OPENAI_API_KEY="xxxx" && echo " * Warning: OPENAI_API_KEY is not set, using default: $OPENAI_API_KEY"
+		[ -z "$SLACK_TOKEN_ID" ] && SLACK_TOKEN_ID="xxxx" && echo " * Warning: SLACK_TOKEN_ID is not set, using default: $SLACK_TOKEN_ID"
+		[ -z "$VECTOR_DATABASE" ] && VECTOR_DATABASE="/app/data/codebot.faiss.${ARCH}" && echo " * Warning: VECTOR_DATABASE is not set, using default: $VECTOR_DATABASE"
+		[ -z "$OPENAI_MODEL" ] && OPENAI_MODEL="gpt-3.5-turbo" && echo " * Warning: OPENAI_MODEL is not set, using default: $OPENAI_MODEL"
+		extra_args="-p 50505:50505"
+		CMD="/bin/bash"
+	;;
+	"ingest")
+		[ -z "$OPENAI_API_KEY" ] && echo " * Error: OPENAI_API_KEY is not set" && exit 1
+		[ -z "$VECTOR_DATABASE" ] && echo " * Error: VECTOR_DATABASE is not set" && exit 1
+		[ -z "$OPENAI_MODEL" ] && OPENAI_MODEL="gpt-3.5-turbo" && echo " * Warning: OPENAI_MODEL is not set, using default: $OPENAI_MODEL"
+		CMD="/bin/bash -c ./start_ingest.sh"
+	;;
+	"qdrant")
+		extra_args="-p 6334:6334"
+		CMD="/bin/bash -c ./start_qdrant.sh"
 	;;
 esac
-
-
-if [ -z "$OPENAI_API_KEY" ]; then
-	echo "OPENAI_API_KEY is not set"
-	exit 1
-fi
-if [ -z "$OPENAI_MODEL" ]; then
-	OPENAI_MODEL="gpt-3.5-turbo"
-fi 
-if [ -z "$VECTOR_DATABASE" ]; then
-	VECTOR_DATABASE="data/codebot.faiss.${ARCH}"
-fi
-if [ "$MYENV" = "prod" ] || [ "$MYENV" = "dev" ]; then
-	extra_args="-p 50505:50505"
-fi
-if [ "$MYENV" = "prod" ]; then
-	if [ -z "$SLACK_TOKEN_ID" ]; then
-		echo "SLACK_TOKEN_ID is not set"
-		exit 1
-	fi
-fi
+echo
 
 if [ ! -d "${PWD}/data" ]; then
 	mkdir -p ${PWD}/data
@@ -53,9 +52,8 @@ docker run --platform "linux/${ARCH}" \
 	-e SLACK_TOKEN_ID="$SLACK_TOKEN_ID" \
 	-e OPENAI_API_KEY="$OPENAI_API_KEY" \
 	-e OPENAI_MODEL="$OPENAI_MODEL" \
-	-e VECTOR_DATABASE="$VECTOR_DATABASE" \
 	-e ARCH="$ARCH" \
 	-e ENV="$MYENV" \
 	-v "${PWD}/data:/app/data" $extra_args \
-	plivo/askme
+	plivo/askme $CMD
 
