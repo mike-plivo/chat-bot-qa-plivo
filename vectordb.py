@@ -64,6 +64,7 @@ class Ingestor(object):
 
     def _ingest_qdrant(self, **kwargs):
         url = self.vector_url.replace("qdrant://", "") or None
+        api_key = os.environ.get("QDRANT_API_KEY", None)
         if not url:
             raise ValueError("Qdrant URL is required")
         db = None
@@ -74,7 +75,8 @@ class Ingestor(object):
             if db is None:
                 db = Qdrant.from_documents(
                     docs, self.embeddings,
-                    url=url, prefer_grpc=True,
+                    url=url, api_key=api_key,
+                    prefer_grpc=True,
                     collection_name="plivoaskme",
                 )
                 print(f"Loaded documents: processed: {len(docs)}, unprocessed: 0")
@@ -274,10 +276,12 @@ class Loader(object):
     def _load_qdrant(self):
         embeddings = OpenAIEmbeddings()
         url = self.vector_url.replace("qdrant://", "") or None
+        api_key = os.environ.get("QDRANT_API_KEY", None)
         if not url:
             raise Exception(f"Qdrant URL not found: {url}")
         client = QdrantClient(
-            url=url, prefer_grpc=True
+            url=url, api_key=api_key,
+            prefer_grpc=True
         )
         db = Qdrant(
             client=client, collection_name="plivoaskme",
