@@ -5,10 +5,12 @@ ARG DEBIAN_FRONTEND=noninteractive
 #RUN apk add --no-cache python3 redis py3-pip gcc g++ libc-dev git make python3-dev bash
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	git \
+	g++ \
 	curl \
 	ca-certificates \
 	redis-server \
 	python3 \
+	python3-dev \
 	python3-pip
 RUN rm -rf /var/lib/apt/lists/* || true
 

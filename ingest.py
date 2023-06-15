@@ -38,18 +38,25 @@ def ingest_docs_from_github_repos():
 def ingest_docs_from_sitemaps():
     ingested_docs = 0
     if not settings.INGEST_SITEMAP_URLS:
-        print("No sitemap urls specified in settings.CODEBOT_SITEMAP_URLS")
+        print("No sitemap urls specified in settings.INGEST_SITEMAP_URLS")
         return ingested_docs
+    try:
+        filter_urls = settings.INGEST_SITEMAP_URLS_FILTERS
+    except:
+        print("No filters specified in settings.INGEST_SITEMAP_URLS_FILTERS")
+        filter_urls = None 
 
     for sitemap_url in settings.INGEST_SITEMAP_URLS:
         print(f"Loading {sitemap_url}")
-        loader = SitemapChunkLoader(web_path=sitemap_url)
+        loader = SitemapChunkLoader(web_path=sitemap_url, 
+                                    filter_urls=filter_urls,
+                                    )
         while True:
-            docs = loader.load_chunks(chunk_size=100)
+            docs = loader.load_chunks(chunk_size=200)
             if len(docs) > 0:
                 print(f"Loaded {len(docs)} documents from {sitemap_url}")
                 ingested_docs += len(docs)
-                Ingestor.ingest(settings.VECTOR_DATABASE, docs, overwrite=False)
+                Ingestor.ingest(settings.VECTOR_DATABASE, docs, overwrite=False, ingest_size=200)
                 continue
             break
     return ingested_docs
