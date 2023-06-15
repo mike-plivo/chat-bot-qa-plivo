@@ -3,6 +3,8 @@ import pickle
 from langchain.vectorstores.faiss import FAISS
 from langchain.vectorstores.redis import Redis
 from langchain.vectorstores.chroma import Chroma
+from qdrant_client import QdrantClient
+from langchain.vectorstores.qdrant import Qdrant
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -24,18 +26,84 @@ class Ingestor(object):
         elif self.vector_url.startswith("chroma://"):
             print(f"Saving {len(self.docs)} into Chroma {self.vector_url}")
             return self._ingest_chroma(**kwargs)
+        elif self.vector_url.startswith("qdrant://"):
+            print(f"Saving {len(self.docs)} into Qdrant {self.vector_url}")
+            return self._ingest_qdrant(**kwargs)
         print(f"Saving {len(self.docs)} into FAISS {self.vector_url}")
         return self._ingest_faiss(**kwargs)
 
     def _ingest_redis(self, **kwargs):
+        db = None
         while len(self.docs) > 0:
+            print(f"Total documents left to process: {len(self.docs)}")
             docs = self._pop()
-            print(f"Saving {len(docs)} into Redis {self.vector_url}")
-            r = Redis.from_documents(docs, self.embeddings, redis_url=self.vector_url, index_name='link')
+            print(f"Processing {len(docs)} documents...")
+            if db is None:
+                db = Redis.from_documents(docs, self.embeddings, redis_url=self.vector_url, index_name='plivoaskme')
+                print(f"Loaded documents: processed: {len(docs)}, unprocessed: 0")
+            else:
+                try:
+                    db.add_documents(documents=docs, embedding=self.embeddings)
+                    processed = len(docs)
+                    unprocessed = 0
+                except ValueError as e:
+                    print(f"ERROR: {e}")
+                    processed = 0
+                    unprocessed = 0
+                    for doc in docs:
+                        try:
+                            db.add_document(doc, self.embeddings)
+                            processed += 1
+                        except ValueError as e:
+                            unprocessed += 1
+                            print(f"ERROR: {e}")
+                            print(f"SKIPPING: {doc}")
+                print(f"Loaded documents: processed: {processed}, unprocessed: {unprocessed}")
+        db = None
+        return True
+
+    def _ingest_qdrant(self, **kwargs):
+        url = self.vector_url.replace("qdrant://", "") or None
+        if not url:
+            raise ValueError("Qdrant URL is required")
+        db = None
+        while len(self.docs) > 0:
+            print(f"Total documents left to process: {len(self.docs)}")
+            docs = self._pop()
+            print(f"Processing {len(docs)} documents...")
+            if db is None:
+                db = Qdrant.from_documents(
+                    docs, self.embeddings,
+                    url=url, prefer_grpc=True,
+                    collection_name="plivoaskme",
+                )
+                print(f"Loaded documents: processed: {len(docs)}, unprocessed: 0")
+            else:
+                try:
+                    db.add_documents(documents=docs, embedding=self.embeddings)
+                    processed = len(docs)
+                    unprocessed = 0
+                except ValueError as e:
+                    print(f"ERROR: {e}")
+                    processed = 0
+                    unprocessed = 0
+                    for doc in docs:
+                        try:
+                            db.add_document(doc, self.embeddings)
+                            processed += 1
+                        except ValueError as e:
+                            unprocessed += 1
+                            print(f"ERROR: {e}")
+                            print(f"SKIPPING: {doc}")
+                print(f"Loaded documents: processed: {processed}, unprocessed: {unprocessed}")
+
+        db = None
         return True
 
     def _ingest_chroma(self, **kwargs):
         directory = self.vector_url.replace("chroma://", "") or None
+        if not directory:
+            raise ValueError("Chroma directory is required")
         try:
             os.makedirs(directory)
         except:
@@ -197,17 +265,33 @@ class Loader(object):
         return self._load_faiss()
 
     def _load_redis(self):
-        #print(f"Loading from Redis {self.vector_url}")
         embeddings = OpenAIEmbeddings()
-        r = Redis.from_existing_index(embeddings, redis_url=self.vector_url, index_name='link')
-        return r
+        db = Redis.from_existing_index(embeddings, 
+                                      redis_url=self.vector_url, 
+                                      index_name='plivoaskme')
+        return db 
+
+    def _load_qdrant(self):
+        embeddings = OpenAIEmbeddings()
+        url = self.vector_url.replace("qdrant://", "") or None
+        if not url:
+            raise Exception(f"Qdrant URL not found: {url}")
+        client = QdrantClient(
+            url=url, prefer_grpc=True
+        )
+        db = Qdrant(
+            client=client, collection_name="plivoaskme",
+            embedding_function=embeddings.embed_query
+        )
+        return db
 
     def _load_chroma(self):
         embeddings = OpenAIEmbeddings()
         directory = self.vector_url.replace("chroma://", "") or None
         if not directory:
             raise Exception(f"Chroma directory not found: {directory}")
-        db = Chroma(persist_directory=self.vector_url, embedding_functionA=embeddings)
+        db = Chroma(persist_directory=self.vector_url, 
+                    embedding_function=embeddings)
         return db
 
     def _load_faiss(self):
