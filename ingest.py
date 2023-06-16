@@ -46,8 +46,9 @@ def ingest_docs_from_sitemaps():
         print("No filters specified in settings.INGEST_SITEMAP_URLS_FILTERS")
         filter_urls = None 
 
+    print(f"Loading sitemaps from {settings.INGEST_SITEMAP_URLS}")
     for sitemap_url in settings.INGEST_SITEMAP_URLS:
-        print(f"Loading {sitemap_url}")
+        print(f"Loading {sitemap_url} START")
         loader = SitemapChunkLoader(web_path=sitemap_url, 
                                     filter_urls=filter_urls,
                                     )
@@ -58,7 +59,9 @@ def ingest_docs_from_sitemaps():
                 ingested_docs += len(docs)
                 Ingestor.ingest(settings.VECTOR_DATABASE, docs, overwrite=False, ingest_size=200)
                 continue
+            print(f"Loading {sitemap_url} NO MORE DOCUMENTS TO LOAD")
             break
+        print(f"Loading {sitemap_url} DONE")
     return ingested_docs
 
 

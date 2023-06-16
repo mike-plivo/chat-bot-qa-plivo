@@ -81,7 +81,7 @@ class SitemapLoader(WebBaseLoader):
 
             # Strip leading and trailing whitespace and newlines
             loc_text = loc.text.strip()
-            print(f"LOC {loc_text}")
+            #print(f"LOC {loc_text}")
 
             #if self.filter_urls and not any(
             #    re.match(r, loc_text) for r in self.filter_urls
@@ -97,6 +97,7 @@ class SitemapLoader(WebBaseLoader):
             )
 
         for sitemap in soup.find_all("sitemap"):
+            print(f"Found embedded sitemap {sitemap}")
             loc = sitemap.find("loc")
             if not loc:
                 continue
@@ -104,8 +105,8 @@ class SitemapLoader(WebBaseLoader):
 
             els.extend(self.parse_sitemap(soup_child))
 
-        for el in els:
-            print(f"ELS {el['loc']}")
+        #for el in els:
+        #    print(f"ELS {el['loc']}")
         return els
 
     def load(self) -> List[Document]:
