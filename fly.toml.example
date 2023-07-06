@@ -1,9 +1,4 @@
-# fly.toml app configuration file generated for plivo-ask-me on 2023-04-27T22:40:32-04:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = "plivo-ask-me"
+app = "<your-fly-app-name>"
 primary_region = "iad"
 
 [http_service]
@@ -28,14 +23,9 @@ primary_region = "iad"
     ARCH="amd64"
 
 [env]
-  OPENAI_MODEL="gpt-4"
-  VECTOR_DATABASE="qdrant://https://7b453944-1c59-4473-8fbd-ebe30cf3cd42.us-east-1-0.aws.cloud.qdrant.io:6333"
-  #VECTOR_DATABASE="mock"
+  OPENAI_MODEL="gpt-3.5" # or gpt-4 
+  VECTOR_DATABASE="qdrant://qdrant_cloud_url" # example: qdrant://https://qdrant.cloud.io:6333
   ENV="prod"
   ARCH="amd64"
   OPENAI_REQUEST_TIMEOUT="180"
-
-[mounts]
- source="plivo_askme_data"
- destination="/data"
 

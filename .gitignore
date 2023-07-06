@@ -1,3 +1,4 @@
+fly.toml
 # do not upload the FAISS files
 data/*.faiss
 data/*.faiss.*

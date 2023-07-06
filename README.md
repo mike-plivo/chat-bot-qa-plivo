@@ -1,137 +1,56 @@
-# chat-bot-qa-plivo
-Chat Bots for Plivo APIs and SDKs.
+# Requirements
+## Setup Qdrant cloud
+*Sign-in or sign-up at https://cloud.qdrant.io/
+*Create a free 1GB cluster
+*Note down the Qdrant API key and the Qdrant Cluster Url
 
-*CodeBot: This Q&A bot is designed to provide coding implementation answers to user questions using information extracted from the Plivo APIs and SDKs. 
+## Setup OpenAI
+*Sign-in or sign-up  at https://openai.com/
+*Setup your account with enough credits
+*Note down the OpenAI API key
 
-*FAQBot: This Q&A bot is designed to answer to user questions using information extracted from the Plivo documentation, APIs and SDKs. 
+## Slack bot setup
+*You need to be a Slack admin for your workspace. 
+*Go to https://api.slack.com/apps and click on “Create a new app”, select “From scratch” in the popup window, and choose a name (for me, it is “PlivoAskMe”), then click on “Create App”.
+*Click on “New Slack Commands” and point it to your application API hosted on fly.io (you can do that later if the fly.io application is not online yet)
+*From the left menu, click on “OAuth & Permissions” then in the “Bot Token Scopes” section, click on “Add an Oauth scope” and select “commands”
+*Go back to the “Basic information” section in the left menu and click “Install to workspace”
+*You should be able to see the “App Credentials” section.
+*Note down the Slack "Verification Token"
 
-It utilizes the OpenAI GPT-3.5-turbo model and a pre-built FAISS vector database to search for relevant information and answer user questions in a concise and accurate manner.
+# Fly.io deployment
+## Setup the application
+Login into your fly.io account and create the application.
 
-You can ingest Github repositories and websites (via sitemap) into The FAISS vector database.
-
-## Installation
-
+Copy the fly.toml example file
 ```bash
-pip3 install -r requirements.txt
+cp fly.toml.example fly.toml # adjust the settings based on your application (name and region)
 ```
 
-## Configure environment variable OPENAI_API_KEY and OPENAI_MODEL
+Configure the "app", "primnary_region", "OPENAI_MODEL", and "VECTOR_DATABASE" settings.
 
+
+## Configure secrets
 ```bash
-export OPENAI_API_KEY=sk-xxxx
-export OPENAI_MODEL=gpt-4
+fly secrets QDRANT_API_KEY=xxxx # replace 'xxxx' with your Qdrant API key
+fly secrets OPENAI_API_KEY=xxxx # replace 'xxxx' with your OpenAI API key
+fly secrets SLACK_TOKEN_ID=xxxx # replace 'xxxx' with your Slack Verification token
 ```
 
-## Build the FAISS vector database
-Add the git repositories and the sitemap urls you want to scan in settings.py, then execute the following command:
-```bash
-python3 ingest.py
-```
-
-## Usage CodeBot
-
-```bash
-python3 -m codebot -h
-```
-
-### CLI mode
-```bash
-python3 -m codebot -c python -m cli -a 'send an SMS'
-```
-
-You can also use stdin for the -a/--ask option:
-```bash
-echo 'send an SMS' |python3 -m codebot -d -c python -m cli -a -
-```
-
-### Prompt mode
-```bash
-python3 -m codebot -c python
-```
-
-- Use the `/help` command in Prompt mode for help.
-
-### Debug mode
-Use the `-d` option to enable debug mode.
-
-### Use a Python module
-```python
-from codebot import CodeBot
-bot = CodeBot()
-bot.set_debug(True)
-result = bot.ask(code="python", question="send an SMS")
-print(result)
-```
-
-## Usage FAQBot
-
-```bash
-python3 -m faqbot -h
-```
-
-### CLI mode
-```bash
-python3 -m faqbot -m cli -a 'How to send an SMS?'
-```
-
-You can also use stdin for the -a/--ask option:
-```bash
-echo 'How to send an SMS?' |python3 -m faqbot -d -c python -m cli -a -
-```
-
-### Prompt mode
-```bash
-python3 -m faqbot
-```
-
-- Use the `/help` command in Prompt mode for help.
-
-### Debug mode
-Use the `-d` option to enable debug mode.
-
-### Use a Python module
-```python
-from faqbot import FAQBot
-bot = FAQBot()
-bot.set_debug(True)
-result = bot.ask(question="How to send an SMS?")
-print(result)
-```
-
-## Notes
-- If the bot does not know the answer, it will respond with "I don't know" and will not attempt to make up an answer.
-
-
-# fly.io install
-
-## First deployment
-### Deploy the app and machine
+## Deploy the app and machine
 ```bash
 fly deploy --force-machines --local-only --region iad --vm-size shared-cpu-2x
 ```
-### Build the vector database (faiss) or update the vector database
+
+## Append data to the vector database
 ```bash
 fly scale memory 4096 # scale up memory to ingest the data
-fly ssh console --pty -C 'python3 /app/ingest.py' # build the vector database
+fly ssh console --pty -C 'python3 /app/ingest.py' # collect and inject data into the vector database
 fly scale memory 2048 # scale down memory
 ```
 
-
-## Update the app
+# Update the app
 ```bash
 fly deploy --local-only
 ```
-
-# Local test
-## Run the server in one terminal
-```bash
-SLACK_TOKEN_ID=xxxx OPENAI_API_KEY=xxxx bash run.sh prod
-```
-
-## Run the test in a second terminal
-```bash
-docker exec -ti <CONTAINER_ID> bash local_test.sh
-```
-
-
 
