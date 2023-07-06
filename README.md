@@ -20,14 +20,17 @@
 
 # Fly.io deployment
 ## Setup the application
-Login into your fly.io account and create the application.
+Create the application
+```bash
+fly apps create <app_name>
+```
 
 Copy the fly.toml example file
 ```bash
-cp fly.toml.example fly.toml # adjust the settings based on your application (name and region)
+cp fly.toml.example fly.toml
 ```
 
-Configure the "app", "primnary_region", "OPENAI_MODEL", and "VECTOR_DATABASE" settings.
+Change the "app" with the <app_name>, and "OPENAI_MODEL" and "VECTOR_DATABASE" settings.
 
 
 ## Configure secrets
