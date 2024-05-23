@@ -1,11 +1,11 @@
 import os
 import pickle
-from langchain.vectorstores.faiss import FAISS
-from langchain.vectorstores.redis import Redis
-from langchain.vectorstores.chroma import Chroma
+from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import Redis
+from langchain_community.vectorstores import Chroma
 from qdrant_client import QdrantClient
-from langchain.vectorstores.qdrant import Qdrant
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_community.vectorstores import Qdrant
+from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 

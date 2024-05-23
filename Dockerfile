@@ -21,7 +21,10 @@ RUN pip3 install --no-cache-dir  -r requirements.txt
 RUN mkdir data || true
 COPY entrypoint.sh .
 COPY local_test.sh .
+COPY qdrant_cloud_keepalive.sh .
 COPY *.py .
+RUN chmod 755 ./local_test.sh
+RUN chmod 755 ./qdrant_cloud_keepalive.sh
 RUN chmod 755 ./entrypoint.sh
 
 EXPOSE 50505

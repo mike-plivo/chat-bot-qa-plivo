@@ -13,9 +13,18 @@ from langchain.prompts.chat import (
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.callbacks import get_openai_callback
+from langchain.globals import set_verbose, set_debug
 
 import vectordb
 import settings
+
+try:
+    if settings.LANGCHAIN_DEBUG is True:
+        set_debug(True)
+        set_verbose(True)
+        print("Langchain Debug mode enabled")
+except ImportError:
+    print("Langchain not installed or deprecated version")
 
 
 class BaseFAQBot(object):

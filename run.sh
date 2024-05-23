@@ -48,6 +48,8 @@ docker run --platform "linux/${ARCH}" \
 	-e OPENAI_API_KEY="$OPENAI_API_KEY" \
 	-e OPENAI_MODEL="$OPENAI_MODEL" \
 	-e VECTOR_DATABASE="$VECTOR_DATABASE" \
+	-e QDRANT_CLOUD_KEEPALIVE="$QDRANT_CLOUD_KEEPALIVE" \
+	-e QDRANT_API_KEY="$QDRANT_API_KEY" \
 	-e ARCH="$ARCH" \
 	-e ENV="$MYENV" \
 	-v "${PWD}/data:/app/data" $extra_args \

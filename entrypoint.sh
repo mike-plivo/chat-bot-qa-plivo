@@ -19,6 +19,7 @@ case "$ENV" in
 		echo "Running in Prod Mode"
 		redis-server --daemonize yes
 		rqworker --verbose &
+		./qdrant_cloud_keepalive.sh &
 		gunicorn -c ./gunicorn.conf.py app:app
 	;;
 esac

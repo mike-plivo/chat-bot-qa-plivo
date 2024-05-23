@@ -2,10 +2,10 @@
 ARCH="amd64"
 case $1 in
 	"arm64"|"amd64")
-		ARCH=$2
+		ARCH=$1
 	;;
 	"*")
-		echo "Invalid architecture $2"
+		echo "Invalid architecture $1"
 		exit 1
 	;;
 esac
